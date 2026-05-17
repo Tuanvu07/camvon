@@ -19,7 +19,7 @@ export default function LoginPage() {
     setError('');
 
     const result = await signIn('credentials', {
-      email, password,
+      username: email, password,
       redirect: false,
     });
 
