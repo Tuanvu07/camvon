@@ -61,6 +61,7 @@ export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
   REDEEMED: 'Đã chuộc',
   OLD_DEBT: 'Nợ cũ',
   BAD_DEBT: 'Nợ xấu',
+  CLOSED: 'Đã đóng',
 };
 
 export const CONTRACT_STATUS_COLORS: Record<ContractStatus, string> = {
@@ -71,6 +72,7 @@ export const CONTRACT_STATUS_COLORS: Record<ContractStatus, string> = {
   REDEEMED: 'bg-blue-500 text-white',
   OLD_DEBT: 'bg-red-400 text-white',
   BAD_DEBT: 'bg-red-700 text-white',
+  CLOSED: 'bg-slate-200 text-slate-800',
 };
 
 export const CONTRACT_STATUS_BADGE: Record<ContractStatus, string> = {
@@ -81,6 +83,7 @@ export const CONTRACT_STATUS_BADGE: Record<ContractStatus, string> = {
   REDEEMED: 'status-redeemed',
   OLD_DEBT: 'status-old-debt',
   BAD_DEBT: 'status-bad-debt',
+  CLOSED: 'status-liquidated',
 };
 
 // ============================================================
