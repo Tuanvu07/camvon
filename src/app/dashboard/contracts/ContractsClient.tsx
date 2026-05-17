@@ -11,7 +11,7 @@ import { calcAccruedInterest, overdueDays } from '@/lib/math';
 import type { RateType, InterestCycle, ContractStatus } from '@/types';
 import QuickCollectionModal from '@/components/QuickCollectionModal';
 
-type ContractRow = {
+export type ContractRow = {
   id: string; shopId: string; contractCode: string;
   customerId: string; assetType: string; assetBrand?: string|null;
   assetModel?: string|null; assetPlate?: string|null; assetImei?: string|null;
