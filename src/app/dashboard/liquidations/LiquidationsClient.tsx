@@ -22,7 +22,7 @@ export default function LiquidationsClient({ pending, done }: { pending: any[], 
               <div className="text-orange-800 font-black bg-orange-100 p-4 rounded-xl mb-4 text-xl border border-orange-200">Biển số/IMEI: {c.assetPlate || '--'}</div>
               <p className="text-slate-600 font-bold mb-6 text-lg">Gốc cho vay: <span className="text-red-600 font-black">{formatCurrency(c.pawningAmount)}</span></p>
               
-              <form action={liquidateContract} onSubmit={() => setLoadingId(c.id)} className="flex flex-col gap-3 border-t border-dashed border-orange-300 pt-4">
+              <form action={async (formData) => { setLoadingId(c.id); await liquidateContract(formData); }} className="flex flex-col gap-3 border-t border-dashed border-orange-300 pt-4">
                 <input type="hidden" name="contractId" value={c.id} />
                 <label className="font-bold text-slate-700">Nhập giá bán thực tế:</label>
                 <div className="relative">

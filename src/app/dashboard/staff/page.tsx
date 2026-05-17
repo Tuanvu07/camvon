@@ -64,7 +64,7 @@ export default async function StaffPage() {
                 <UserPlus size={28} /> Thêm Nhân Viên
               </h2>
               
-              <form action={createStaff} className="space-y-6">
+              <form action={async (formData) => { "use server"; await createStaff(formData); }} className="space-y-6">
                 <div className="input-group">
                   <label className="input-label font-bold text-lg">Tên Hiển Thị (Họ Tên) *</label>
                   <input required name="name" type="text" className="input p-5 text-xl font-bold" placeholder="VD: Nguyễn Văn B" />

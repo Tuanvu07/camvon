@@ -44,7 +44,7 @@ export default async function CapitalPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="card p-10 border-4 border-emerald-200 bg-emerald-50/50 shadow-xl">
             <h2 className="text-3xl font-black text-emerald-800 flex items-center gap-3 mb-8"><PlusCircle size={36}/> BƠM THÊM VỐN</h2>
-            <form action={adjustCapital} className="space-y-6">
+            <form action={async (formData) => { "use server"; await adjustCapital(formData); }} className="space-y-6">
               <input type="hidden" name="actionType" value="ADD" />
               <div>
                 <label className="block font-bold text-emerald-800 text-xl mb-2">Số tiền nạp vào (VNĐ)</label>
@@ -62,7 +62,7 @@ export default async function CapitalPage() {
 
           <div className="card p-10 border-4 border-red-200 bg-red-50/50 shadow-xl">
             <h2 className="text-3xl font-black text-red-800 flex items-center gap-3 mb-8"><MinusCircle size={36}/> RÚT BỚT VỐN</h2>
-            <form action={adjustCapital} className="space-y-6">
+            <form action={async (formData) => { "use server"; await adjustCapital(formData); }} className="space-y-6">
               <input type="hidden" name="actionType" value="WITHDRAW" />
               <div>
                 <label className="block font-bold text-red-800 text-xl mb-2">Số tiền rút ra (VNĐ)</label>

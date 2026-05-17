@@ -24,7 +24,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="card p-8 border-2 border-slate-200">
-        <form action={updateShopSettings} className="space-y-6">
+        <form action={async (formData) => { "use server"; await updateShopSettings(formData); }} className="space-y-6">
           <div className="input-group">
             <label className="input-label text-xl">Tên Cửa Hàng (In trên Biên lai) *</label>
             <input required name="name" type="text" className="input text-2xl font-bold p-6" defaultValue={shop.name} />
