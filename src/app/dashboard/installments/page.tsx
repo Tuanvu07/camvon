@@ -1,16 +1,43 @@
-﻿import { Construction } from 'lucide-react';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { prisma } from '@/lib/db';
+import { redirect } from 'next/navigation';
+import ContractsClient from '@/app/dashboard/contracts/ContractsClient';
+import { TrendingDown } from 'lucide-react';
 
-export default function Page() {
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <h1 className="page-title text-3xl font-black text-slate-800">Quản lý Trả góp</h1>
-      <div className="card p-16 flex flex-col items-center justify-center text-center space-y-6 mt-8 shadow-xl border-dashed border-2 border-slate-300">
-        <div className="w-32 h-32 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
-          <Construction size={64} />
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+export default async function InstallmentsPage() {
+  const session = await getServerSession(authOptions);
+  if (!session) redirect('/login');
+  
+  const shopId = (session.user as any).shopId;
+  
+  try {
+    // Tạm thời lấy tất cả Hợp đồng để đảm bảo hiển thị dữ liệu (Theo yêu cầu tái sử dụng UI Cầm đồ)
+    // Thực tế sẽ cần phân loại dựa trên interestCycle hoặc interestRateType trong tương lai.
+    const contracts = await prisma.contract.findMany({
+      where: { shopId },
+      include: { customer: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div>
+          <h1 className="page-title flex items-center gap-3"><TrendingDown className="text-blue-600" /> Quản Lý Trả Góp / Bốc Họ</h1>
+          <p className="page-subtitle text-lg">Giao diện được đồng bộ 100% với Quản lý Cầm đồ để tối ưu trải nghiệm Elders-First.</p>
         </div>
-        <h2 className="text-3xl font-black text-slate-800">Tính năng đang được thiết lập</h2>
-        <p className="text-xl text-slate-500 font-medium max-w-lg">Module <strong>Quản lý Trả góp</strong> đang trong quá trình phát triển. Vui lòng quay lại sau!</p>
+        <ContractsClient contracts={contracts as any} shopId={shopId} />
       </div>
-    </div>
-  );
+    );
+  } catch (e) {
+    return (
+      <div className="p-8 text-center text-red-500 bg-red-50 rounded-2xl border border-red-200">
+        <h2 className="text-2xl font-bold mb-2">Đã xảy ra lỗi</h2>
+        <p>Không thể tải dữ liệu hợp đồng trả góp. Vui lòng thử lại sau.</p>
+      </div>
+    );
+  }
 }
