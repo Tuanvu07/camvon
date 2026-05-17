@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import Link from 'next/link';
 import { Wallet, TrendingUp, TrendingDown, Clock, Search } from 'lucide-react';
+import PrintButton from '@/components/PrintButton';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -131,6 +132,7 @@ export default async function CashbookPage() {
                 <th className="py-4 text-sm">Nội dung</th>
                 <th className="py-4 text-sm text-right">Số tiền</th>
                 <th className="py-4 text-sm">Người thực hiện</th>
+                <th className="py-4 text-sm text-center">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -181,6 +183,21 @@ export default async function CashbookPage() {
                           </div>
                           <span className="font-medium text-slate-700">{tx.staffName || 'Admin'}</span>
                         </div>
+                      </td>
+                      <td className="py-4 text-center">
+                        <PrintButton
+                          data={{
+                            shopName: shop.name,
+                            transactionId: tx.id,
+                            date: tx.transactionDate || tx.createdAt,
+                            typeLabel: info.label,
+                            amount: tx.amount,
+                            contractCode: tx.contract?.contractCode,
+                            customerName: tx.contract?.customer?.fullName,
+                            staffName: tx.staffName || 'Admin',
+                            note: tx.note || tx.description || undefined,
+                          }}
+                        />
                       </td>
                     </tr>
                   );

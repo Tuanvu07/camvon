@@ -40,9 +40,9 @@ export async function processCollection(params: {
 
     if (!contract) return { error: 'Hợp đồng không tồn tại' };
 
-    await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // 1. Record transaction in Cashbook
-      await tx.transaction.create({
+      const newTx = await tx.transaction.create({
         data: {
           shopId,
           contractId,
@@ -98,11 +98,12 @@ export async function processCollection(params: {
           }
         });
       }
+      return newTx;
     });
 
     revalidatePath('/dashboard/contracts');
     revalidatePath('/dashboard');
-    return { success: true };
+    return { success: true, transactionId: result.id };
   } catch (error: any) {
     console.error('processCollection error:', error);
     return { error: error.message || 'Lỗi hệ thống trong quá trình thu tiền' };

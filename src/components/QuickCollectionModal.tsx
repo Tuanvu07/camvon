@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { X, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { X, CheckCircle, Loader2, AlertCircle, Printer } from 'lucide-react';
 import { formatCurrency, formatInterestRate } from '@/lib/utils';
 import { calcInterestForCycle, calcRedemptionAmount } from '@/lib/math';
 import { processCollection } from '@/actions/processCollection';
+import PrintButton from '@/components/PrintButton';
 import type { ContractRow } from '@/app/dashboard/contracts/ContractsClient'; // We will export this type or use any for now
 import type { RateType, InterestCycle } from '@/types';
 
@@ -17,6 +18,7 @@ interface QuickCollectionModalProps {
 export default function QuickCollectionModal({ contract, onClose, onSuccess }: QuickCollectionModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successData, setSuccessData] = useState<any>(null);
 
   // Tính toán số tiền
   const interestOneCycle = calcInterestForCycle(
@@ -54,9 +56,53 @@ export default function QuickCollectionModal({ contract, onClose, onSuccess }: Q
     if (res.error) {
       setError(res.error);
     } else {
-      onSuccess();
+      setSuccessData({
+        typeLabel: type === 'INTEREST_COLLECT' ? `Thu lãi phí ${cycles || 1} kỳ` : 'Tất toán hợp đồng (chuộc đồ)',
+        amount,
+        transactionId: res.transactionId
+      });
     }
   };
+
+  if (successData) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col p-6 text-center">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle size={32} />
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 mb-1">Thành công!</h2>
+          <p className="text-slate-500 font-medium mb-6">Giao dịch đã được ghi nhận vào sổ quỹ.</p>
+          
+          <div className="bg-slate-50 p-4 rounded-xl mb-6">
+            <div className="text-sm font-semibold text-slate-600 mb-1">{successData.typeLabel}</div>
+            <div className="text-2xl font-black text-emerald-600">{formatCurrency(successData.amount)}</div>
+          </div>
+
+          <div className="space-y-3">
+            <PrintButton 
+              showText 
+              data={{
+                shopName: 'Hệ thống Cầm Đồ', // Fallback, could pass from props
+                transactionId: successData.transactionId,
+                date: new Date(),
+                typeLabel: successData.typeLabel,
+                amount: successData.amount,
+                contractCode: contract.contractCode,
+                customerName: contract.customer?.fullName,
+                staffName: 'Admin', // Fallback
+                note: 'Thu nhanh qua Poka-yoke UI'
+              }}
+              className="w-full btn btn-primary"
+            />
+            <button onClick={onSuccess} className="w-full btn btn-outline">
+              Đóng (Hoàn tất)
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
