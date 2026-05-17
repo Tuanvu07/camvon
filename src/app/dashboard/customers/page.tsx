@@ -2,74 +2,206 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
-import { formatDate, formatCurrency } from '@/lib/utils';
-import { Search, Plus, Eye } from 'lucide-react';
+import { formatCurrency, formatPhone } from '@/lib/utils';
 import Link from 'next/link';
+import { Users, Phone, UserPlus, CreditCard, ShieldAlert, Star } from 'lucide-react';
+import SearchBar from '@/components/SearchBar';
 
-export default async function CustomersPage() {
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+interface PageProps {
+  searchParams: { q?: string };
+}
+
+export default async function CustomersPage({ searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/login');
+  
   const shopId = (session.user as any).shopId as string;
+  const q = searchParams?.q || '';
 
+  // Query database with search and includes
   const customers = await prisma.customer.findMany({
-    where: { shopId },
+    where: {
+      shopId,
+      ...(q ? {
+        OR: [
+          { fullName: { contains: q, mode: 'insensitive' } },
+          { phone: { contains: q } },
+          { cccdNumber: { contains: q } },
+        ]
+      } : {})
+    },
+    include: {
+      contracts: {
+        select: {
+          id: true,
+          status: true,
+          pawningAmount: true,
+        }
+      }
+    },
     orderBy: { createdAt: 'desc' },
-    include: { _count: { select: { contracts: true } } },
   });
 
-  const STATUS_LBL = { NORMAL: 'Bình thường', VIP: 'VIP', BLACKLIST: 'Đen sách' };
-  const STATUS_CLS = { NORMAL: 'bg-emerald-100 text-emerald-700', VIP: 'bg-blue-100 text-blue-700', BLACKLIST: 'bg-red-100 text-red-700' };
+  // Calculate totals for summary metrics
+  const totalCustomers = customers.length;
+  const activeCustomers = customers.filter(c => 
+    c.contracts.some(ct => ['ACTIVE', 'INTEREST_DUE', 'PENDING_LIQUIDATION'].includes(ct.status))
+  ).length;
+  const badDebtCustomers = customers.filter(c => 
+    c.contracts.some(ct => ['BAD_DEBT', 'OLD_DEBT'].includes(ct.status))
+  ).length;
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="page-title">Danh sách khách hàng</h1>
-          <p className="page-subtitle">{customers.length} khách hàng trong hệ thống</p>
+          <h1 className="page-title flex items-center gap-3">
+            <Users size={28} className="text-blue-600" /> Quản lý Khách hàng
+          </h1>
+          <p className="page-subtitle">Danh bạ khách hàng và lịch sử tín dụng</p>
         </div>
-        <button className="btn btn-primary"><Plus size={18} /> Thêm khách hàng</button>
+        
+        {/* Nút bấm khổng lồ - Thêm KH Mới */}
+        <Link 
+          href="/dashboard/customers/new" 
+          className="btn btn-primary btn-lg flex-shrink-0 shadow-md shadow-blue-500/20"
+        >
+          <UserPlus size={22} />
+          <span className="font-black">Thêm Khách Mới</span>
+        </Link>
       </div>
 
-      <div className="card">
-        <div className="card-body py-3 flex gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
-            <input id="customer-search" placeholder="Tìm tên khách, CCCD, số điện thoại..." className="input pl-9 py-2 text-sm" />
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+      {/* Thống kê nhanh */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-2xl p-4 border border-slate-100 flex items-center gap-4 shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <Users size={24} className="text-blue-600" />
           </div>
-          <select className="select w-40 py-2 text-sm"><option>Tất cả</option><option>Bình thường</option><option>VIP</option></select>
+          <div>
+            <div className="text-sm font-semibold text-slate-500">Tổng khách</div>
+            <div className="text-2xl font-black text-slate-800">{totalCustomers}</div>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl p-4 border border-slate-100 flex items-center gap-4 shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+            <CreditCard size={24} className="text-emerald-600" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-slate-500">Đang vay</div>
+            <div className="text-2xl font-black text-slate-800">{activeCustomers}</div>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl p-4 border border-slate-100 flex items-center gap-4 shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+            <ShieldAlert size={24} className="text-red-600" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-slate-500">Nợ xấu</div>
+            <div className="text-2xl font-black text-slate-800">{badDebtCustomers}</div>
+          </div>
         </div>
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="lendos-table">
-            <thead>
-              <tr><th>STT</th><th>Tên khách hàng</th><th>Địa chỉ</th><th>Điện thoại</th><th>CCCD/HC</th><th>HĐ</th><th>Ngày tạo</th><th>Trạng thái</th><th></th></tr>
-            </thead>
-            <tbody>
-              {customers.map((c, i) => (
-                <tr key={c.id}>
-                  <td className="text-slate-400 text-xs">{i + 1}</td>
-                  <td className="font-bold text-blue-600">{c.fullName}</td>
-                  <td className="text-sm text-slate-500 max-w-[150px] truncate">{c.address ?? '--'}</td>
-                  <td className="text-slate-700">{c.phone ?? '--'}</td>
-                  <td className="font-mono text-sm text-slate-500">{c.cccdNumber ?? '--'}</td>
-                  <td className="text-center font-bold">{c._count.contracts}</td>
-                  <td className="text-sm text-slate-500">{formatDate(c.createdAt)}</td>
-                  <td>
-                    <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${STATUS_CLS[c.status as keyof typeof STATUS_CLS] ?? STATUS_CLS.NORMAL}`}>
-                      {STATUS_LBL[c.status as keyof typeof STATUS_LBL] ?? c.status}
-                    </span>
-                  </td>
-                  <td><Link href={`/dashboard/customers/${c.id}`} className="btn-icon text-slate-500 hover:bg-slate-100"><Eye size={14} /></Link></td>
-                </tr>
-              ))}
-              {customers.length === 0 && (
-                <tr><td colSpan={9} className="text-center py-10 text-slate-400">Chưa có khách hàng nào</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* Tìm kiếm */}
+      <div className="max-w-2xl">
+        <SearchBar placeholder="Nhập Số điện thoại, Tên hoặc quét mã vạch CCCD..." />
+      </div>
+
+      {/* Danh sách KH (Grid) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        {customers.length === 0 ? (
+          <div className="col-span-full py-16 text-center text-slate-400 bg-white rounded-2xl border border-slate-100 border-dashed">
+            <Users size={48} className="mx-auto mb-3 opacity-20" />
+            <div className="text-lg font-medium">Không tìm thấy khách hàng nào.</div>
+          </div>
+        ) : (
+          customers.map((c) => {
+            // Phân loại trạng thái
+            const activeContracts = c.contracts.filter(ct => ['ACTIVE', 'INTEREST_DUE', 'PENDING_LIQUIDATION'].includes(ct.status));
+            const badContracts = c.contracts.filter(ct => ['BAD_DEBT', 'OLD_DEBT'].includes(ct.status));
+            
+            const totalActiveLoan = activeContracts.reduce((sum, ct) => sum + ct.pawningAmount, 0);
+
+            // Xác định UI State
+            let uiState = { border: 'border-slate-200', bg: 'bg-white', badge: '' };
+            if (badContracts.length > 0) {
+              uiState = { border: 'border-red-300 shadow-red-500/10', bg: 'bg-red-50', badge: 'bg-red-500' };
+            } else if (activeContracts.length > 0) {
+              uiState = { border: 'border-emerald-200 shadow-emerald-500/10', bg: 'bg-white', badge: 'bg-emerald-500' };
+            }
+
+            return (
+              <div 
+                key={c.id} 
+                className={`rounded-2xl border ${uiState.border} ${uiState.bg} p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group`}
+              >
+                {/* Trạng thái Indicator ở góc trên */}
+                <div className={`absolute top-0 right-0 w-16 h-16 -mr-8 -mt-8 rotate-45 ${uiState.badge}`}></div>
+                
+                {/* Badge Status */}
+                <div className="absolute top-3 right-3 z-10">
+                  {badContracts.length > 0 && <ShieldAlert size={20} className="text-white drop-shadow-md" />}
+                  {activeContracts.length > 0 && badContracts.length === 0 && <CreditCard size={20} className="text-white drop-shadow-md" />}
+                  {c.status === 'VIP' && <Star size={20} className="text-amber-400 drop-shadow-md" fill="currentColor" />}
+                </div>
+
+                <div className="space-y-4">
+                  {/* Avatar/Tên */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-full bg-slate-200 flex flex-col items-center justify-center font-bold text-slate-500 flex-shrink-0 text-xl">
+                      {c.fullName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="font-black text-xl text-slate-800 leading-tight pr-6">
+                        {c.fullName}
+                      </div>
+                      <div className="text-sm font-semibold text-slate-500 mt-1">
+                        CCCD: {c.cccdNumber || 'Chưa cập nhật'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SĐT (Bấm gọi được) */}
+                  <a 
+                    href={c.phone ? `tel:${c.phone}` : '#'} 
+                    className="flex items-center gap-2 p-3 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-xl transition-colors font-bold text-lg"
+                  >
+                    <Phone size={18} className="opacity-70" />
+                    {c.phone ? formatPhone(c.phone) : 'Không có SĐT'}
+                  </a>
+
+                  {/* Tình trạng hợp đồng */}
+                  <div className="pt-3 border-t border-slate-200/60">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold text-slate-500">Đang vay ({activeContracts.length})</span>
+                      <span className="font-black text-slate-800">{formatCurrency(totalActiveLoan)}</span>
+                    </div>
+                    {badContracts.length > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-bold text-red-500">Nợ xấu ({badContracts.length})</span>
+                        <span className="font-bold text-red-600">!! CẢNH BÁO !!</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Hành động */}
+                  <div className="pt-2">
+                    <Link 
+                      href={`/dashboard/customers/${c.id}`}
+                      className="btn btn-outline w-full justify-center"
+                    >
+                      Xem Hồ Sơ
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
