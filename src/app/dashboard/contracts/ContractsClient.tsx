@@ -9,6 +9,7 @@ import {
 import { cn, formatCurrency, formatDate, formatInterestRate, CONTRACT_STATUS_LABELS } from '@/lib/utils';
 import { calcAccruedInterest, overdueDays } from '@/lib/math';
 import type { RateType, InterestCycle, ContractStatus } from '@/types';
+import QuickCollectionModal from '@/components/QuickCollectionModal';
 
 type ContractRow = {
   id: string; shopId: string; contractCode: string;
@@ -56,6 +57,7 @@ const STATUS_LBL: Record<string, string> = {
 export default function ContractsClient({ contracts, shopId }: { contracts: ContractRow[]; shopId: string }) {
   const [tab, setTab] = useState<string>('ALL');
   const [search, setSearch] = useState('');
+  const [selectedContract, setSelectedContract] = useState<ContractRow | null>(null);
 
   const counts: Record<string, number> = useMemo(() => {
     const c: Record<string, number> = { ALL: contracts.length };
@@ -181,6 +183,13 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
                     </td>
                     <td>
                       <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => setSelectedContract(c)}
+                          className="btn-icon text-emerald-600 hover:bg-emerald-50" 
+                          title="Thu tiền nhanh"
+                        >
+                          💰
+                        </button>
                         <Link href={`/dashboard/contracts/${c.id}`} className="btn-icon text-blue-600 hover:bg-blue-50" title="Xem"><Eye size={14} /></Link>
                         <button className="btn-icon text-slate-500 hover:bg-slate-100" title="In bill"><Printer size={14} /></button>
                       </div>
@@ -196,6 +205,15 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
           <span>Tổng vốn: <strong className="text-slate-800">{formatCurrency(totalPawned)}</strong></span>
         </div>
       </div>
+
+      {/* Quick Collection Modal */}
+      {selectedContract && (
+        <QuickCollectionModal 
+          contract={selectedContract} 
+          onClose={() => setSelectedContract(null)} 
+          onSuccess={() => setSelectedContract(null)} 
+        />
+      )}
     </div>
   );
 }
