@@ -38,33 +38,18 @@ const NAV_GROUPS: NavGroup[] = [
     badge: 40,
     children: [
       { label: 'Đang cầm', href: '/dashboard/contracts', icon: <Clock size={14} /> },
-      { label: 'Tạo hợp đồng', href: '/dashboard/contracts/creation', icon: <FileText size={14} /> },
-      { label: 'Tra cứu HĐ', href: '/dashboard/contracts/search', icon: <BookOpen size={14} /> },
-    ],
-  },
-  {
-    label: 'Tín chấp',
-    icon: <Banknote size={18} />,
-    children: [
-      { label: 'Đang vay', href: '/dashboard/loans/active' },
-      { label: 'Tạo khoản vay', href: '/dashboard/loans/creation' },
+      { label: 'Tạo hợp đồng', href: '/dashboard/contracts/new', icon: <FileText size={14} /> },
     ],
   },
   {
     label: 'Trả góp',
     icon: <TrendingDown size={18} />,
-    children: [
-      { label: 'Đang trả', href: '/dashboard/installments/active' },
-      { label: 'Tạo khoản trả', href: '/dashboard/installments/creation' },
-    ],
+    href: '/dashboard/installments',
   },
   {
     label: 'Thanh lý',
     icon: <AlertTriangle size={18} />,
-    children: [
-      { label: 'Chờ thanh lý', href: '/dashboard/liquidation/pending', icon: <Clock size={14} /> },
-      { label: 'Đã thanh lý', href: '/dashboard/liquidation/done', icon: <CheckCircle size={14} /> },
-    ],
+    href: '/dashboard/liquidations',
   },
   {
     label: 'DS Khách hàng',
@@ -72,24 +57,19 @@ const NAV_GROUPS: NavGroup[] = [
     href: '/dashboard/customers',
   },
   {
-    label: 'Quản lý cửa hàng',
-    icon: <Building2 size={18} />,
-    children: [
-      { label: 'Tổng quát', href: '/dashboard/settings/overview' },
-      { label: 'Chi tiết cửa hàng', href: '/dashboard/settings/shop' },
-      { label: 'DS cửa hàng', href: '/dashboard/settings/shops' },
-      { label: 'Cấu hình hàng hóa', href: '/dashboard/settings/categories' },
-      { label: 'Nhập quỹ đầu ngày', href: '/dashboard/settings/fund' },
-      { label: '⚡ Nhập dữ liệu 1Gold', href: '/dashboard/settings/migration' },
-    ],
+    label: 'Sổ quỹ',
+    icon: <Wallet size={18} />,
+    href: '/dashboard/cashbook',
   },
   {
-    label: 'Quản lý thu chi',
-    icon: <Wallet size={18} />,
-    children: [
-      { label: 'Thu chi', href: '/dashboard/funds/transactions' },
-      { label: 'Chốt ca', href: '/dashboard/funds/shift-close' },
-    ],
+    label: 'Báo cáo',
+    icon: <BookOpen size={18} />,
+    href: '/dashboard/reports',
+  },
+  {
+    label: 'Quản lý cửa hàng',
+    icon: <Building2 size={18} />,
+    href: '/dashboard/shops',
   },
   {
     label: 'Quản lý nguồn vốn',
@@ -104,29 +84,12 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Thống kê',
     icon: <BarChart2 size={18} />,
-    children: [
-      { label: 'Thẻ cầm', href: '/dashboard/reports/pawn-cards' },
-      { label: 'Danh sách khách', href: '/dashboard/reports/customers' },
-      { label: 'Tổng hợp', href: '/dashboard/reports/summary' },
-      { label: 'Nhắc nợ', href: '/dashboard/reports/reminders' },
-    ],
-  },
-  {
-    label: 'Báo cáo',
-    icon: <BookOpen size={18} />,
-    children: [
-      { label: 'Sổ quỹ tiền mặt', href: '/dashboard/reports/cash-book' },
-      { label: 'Tổng hợp giao dịch', href: '/dashboard/reports/transactions' },
-    ],
+    href: '/dashboard/analytics',
   },
   {
     label: 'Kho',
     icon: <Boxes size={18} />,
-    children: [
-      { label: 'Xe máy', href: '/dashboard/warehouse/xm' },
-      { label: 'Điện thoại', href: '/dashboard/warehouse/dt' },
-      { label: 'Kho khác', href: '/dashboard/warehouse/other' },
-    ],
+    href: '/dashboard/inventory',
   },
 ];
 
