@@ -16,6 +16,15 @@ export const metadata: Metadata = {
   },
   description: 'Nền tảng SaaS quản lý cầm đồ và cho vay vi mô hàng đầu Việt Nam. Tối ưu cho người lớn tuổi, tích hợp quét CCCD, in bill K80.',
   keywords: ['cầm đồ', 'cho vay', 'quản lý cầm đồ', 'LendOS', 'phần mềm cầm đồ'],
+  appleWebApp: {
+    capable: true,
+    title: 'LendOS',
+    statusBarStyle: 'default',
+  },
+};
+
+export const viewport = {
+  themeColor: '#0f172a',
 };
 
 export default function RootLayout({
