@@ -1,0 +1,268 @@
+// LendOS - Prisma Schema (Production: PostgreSQL/Supabase)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ──────────────────────────────────────────────────────────────
+// MODEL: Shop (Cửa hàng - đơn vị Multi-tenancy)
+// ──────────────────────────────────────────────────────────────
+model Shop {
+  id             String   @id @default(uuid())
+  name           String
+  phone          String?
+  address        String?
+  logoUrl        String?
+  taxCode        String?
+  ownerName      String?
+  initialCapital Float    @default(0)
+  cashBalance    Float    @default(0)
+  zaloOaToken    String?
+  printTemplate  String   @default("K80")
+  timezone       String   @default("Asia/Ho_Chi_Minh")
+  currency       String   @default("VND")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  users            ShopUser[]
+  customers        Customer[]
+  contracts        Contract[]
+  transactions     Transaction[]
+  assetCategories  AssetCategory[]
+  auditLogs        AuditLog[]
+  interestPackages InterestPackage[]
+
+  @@map("shops")
+}
+
+// ──────────────────────────────────────────────────────────────
+// MODEL: User (Tài khoản người dùng)
+// ──────────────────────────────────────────────────────────────
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  username     String   @unique
+  name         String?
+  phone        String?
+  passwordHash String
+  avatar       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  shops        ShopUser[]
+  auditLogs    AuditLog[]
+  transactions Transaction[]
+
+  @@map("users")
+}
+
+// ──────────────────────────────────────────────────────────────
+// MODEL: ShopUser (Phân quyền User trong Shop)
+// ──────────────────────────────────────────────────────────────
+model ShopUser {
+  id       String  @id @default(uuid())
+  shopId   String
+  userId   String
+  role     String  @default("STAFF") // OWNER | ADMIN | STAFF
+  isActive Boolean @default(true)
+
+  shop Shop @relation(fields: [shopId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([shopId, userId])
+  @@index([shopId])
+  @@index([userId])
+  @@map("shop_users")
+}
+
+// ──────────────────────────────────────────────────────────────
+// MODEL: Customer (Khách hàng)
+// ──────────────────────────────────────────────────────────────
+model Customer {
+  id          String   @id @default(uuid())
+  shopId      String
+  cccdNumber  String?
+  fullName    String
+  dateOfBirth String?
+  gender      String?
+  address     String?
+  cccdFront   String?
+  cccdBack    String?
+  phone       String?
+  phone2      String?
+  email       String?
+  status      String   @default("NORMAL") // NORMAL | VIP | BLACKLIST
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shop      Shop       @relation(fields: [shopId], references: [id])
+  contracts Contract[]
+
+  @@index([shopId])
+  @@index([shopId, phone])
+  @@index([shopId, cccdNumber])
+  @@map("customers")
+}
+
+// ──────────────────────────────────────────────────────────────
+// MODEL: AssetCategory (Danh mục tài sản)
+// ──────────────────────────────────────────────────────────────
+model AssetCategory {
+  id               String  @id @default(uuid())
+  shopId           String
+  name             String
+  code             String
+  interestRate     Float   @default(0)
+  interestCycle    String  @default("MONTHLY")
+  liquidationAfter Int     @default(10)
+  isActive         Boolean @default(true)
+
+  shop      Shop       @relation(fields: [shopId], references: [id])
+  contracts Contract[]
+
+  @@index([shopId])
+  @@map("asset_categories")
+}
+
+// ──────────────────────────────────────────────────────────────
+// MODEL: InterestPackage (Gói lãi suất)
+// ──────────────────────────────────────────────────────────────
+model InterestPackage {
+  id          String  @id @default(uuid())
+  shopId      String
+  name        String
+  description String?
+  rateType    String  @default("PER_MILLION_PER_DAY")
+  rateValue   Float
+  cycle       String  @default("WEEKLY")
+  isDefault   Boolean @default(false)
+  isActive    Boolean @default(true)
+
+  shop      Shop       @relation(fields: [shopId], references: [id])
+  contracts Contract[]
+
+  @@index([shopId])
+  @@map("interest_packages")
+}
+
+// ──────────────────────────────────────────────────────────────
+// MODEL: Contract (Hợp đồng cầm đồ)
+// ──────────────────────────────────────────────────────────────
+model Contract {
+  id                String    @id @default(uuid())
+  shopId            String
+  contractCode      String
+  customerId        String
+  categoryId        String?
+  interestPackageId String?
+
+  // Thông tin tài sản
+  assetType      String  @default("KHAC") // XM | DT | LT | VANG | OTO | KHAC
+  assetName      String? // Tên tài sản đầy đủ
+  assetBrand     String?
+  assetModel     String?
+  assetPlate     String? // Biển số xe
+  assetImei      String? // IMEI / Số khung / Serial
+  assetColor     String?
+  assetCondition String?
+  assetImages    String  @default("[]") // JSON array of image URLs
+  assetNote      String?
+
+  // Tài chính
+  pawningAmount     Float // Tiền vay gốc (loanAmount)
+  interestRateType  String  @default("FIXED_PER_WEEK") // FIXED_PER_WEEK | FIXED_PER_MONTH | PERCENT_PER_MONTH | PER_MILLION_PER_DAY
+  interestRateValue Float   @default(0)
+  interestCycle     String  @default("WEEKLY") // DAILY | WEEKLY | BIWEEKLY | MONTHLY
+  totalInterestPaid Float   @default(0)
+
+  // Thời gian
+  startDate       DateTime
+  dueDate         DateTime?
+  interestDueDate DateTime? // nextInterestDate - ngày đóng lãi tiếp theo
+  lastPaymentDate DateTime?
+
+  // Trạng thái & metadata
+  status          String   @default("ACTIVE") // ACTIVE | INTEREST_DUE | PENDING_LIQUIDATION | OLD_DEBT | BAD_DEBT | CLOSED | LIQUIDATED
+  note            String?
+  createdByUserId String?
+  importedFrom    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop            Shop             @relation(fields: [shopId], references: [id])
+  customer        Customer         @relation(fields: [customerId], references: [id])
+  category        AssetCategory?   @relation(fields: [categoryId], references: [id])
+  interestPackage InterestPackage? @relation(fields: [interestPackageId], references: [id])
+  transactions    Transaction[]
+  auditLogs       AuditLog[]
+
+  @@unique([shopId, contractCode])
+  @@index([shopId])
+  @@index([shopId, status])
+  @@index([shopId, customerId])
+  @@index([shopId, interestDueDate])
+  @@map("contracts")
+}
+
+// ──────────────────────────────────────────────────────────────
+// MODEL: Transaction (Giao dịch thu chi)
+// ──────────────────────────────────────────────────────────────
+model Transaction {
+  id              String   @id @default(uuid())
+  shopId          String
+  contractId      String?
+  userId          String?  // Nhân viên thực hiện
+  type            String
+  // PAWN_IN | INTEREST_COLLECT | REDEEM_OUT | LIQUIDATION | EXPENSE | INCOME | PAID_INTEREST | REPAY_PRINCIPAL | CLOSE_CONTRACT
+  amount          Float
+  description     String?
+  note            String?
+  staffName       String?
+  referenceCode   String?
+  paymentMethod   String   @default("CASH")
+  transactionDate DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  shop     Shop      @relation(fields: [shopId], references: [id])
+  contract Contract? @relation(fields: [contractId], references: [id])
+  user     User?     @relation(fields: [userId], references: [id])
+
+  @@index([shopId])
+  @@index([shopId, transactionDate])
+  @@index([shopId, type])
+  @@index([contractId])
+  @@map("transactions")
+}
+
+// ──────────────────────────────────────────────────────────────
+// MODEL: AuditLog (Nhật ký kiểm toán)
+// ──────────────────────────────────────────────────────────────
+model AuditLog {
+  id         String   @id @default(uuid())
+  shopId     String
+  userId     String?
+  contractId String?
+  action     String   // CREATE | UPDATE | DELETE | LOGIN | EXPORT
+  entity     String   // Contract | Customer | Transaction | Shop
+  entityId   String?
+  oldData    String?  // JSON snapshot trước khi thay đổi
+  newData    String?  // JSON snapshot sau khi thay đổi
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  shop     Shop      @relation(fields: [shopId], references: [id])
+  user     User?     @relation(fields: [userId], references: [id])
+  contract Contract? @relation(fields: [contractId], references: [id])
+
+  @@index([shopId])
+  @@index([shopId, entity])
+  @@index([shopId, createdAt])
+  @@map("audit_logs")
+}
