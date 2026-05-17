@@ -18,17 +18,23 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const result = await signIn('credentials', {
-      username: email, password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn('credentials', {
+        username: email, password,
+        redirect: false,
+      });
 
-    setLoading(false);
-    if (result?.error) {
-      setError('Email hoặc mật khẩu không đúng!');
-    } else {
-      router.push('/dashboard');
-      router.refresh();
+      if (result?.error) {
+        setError('Email hoặc mật khẩu không đúng!');
+      } else {
+        router.push('/dashboard');
+        router.refresh();
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Lỗi kết nối máy chủ xác thực. Vui lòng kiểm tra lại cấu hình NEXTAUTH_URL trên Vercel.');
+    } finally {
+      setLoading(false);
     }
   };
 
