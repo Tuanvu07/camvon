@@ -1,15 +1,56 @@
-﻿import { Construction } from 'lucide-react';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { prisma } from '@/lib/db';
+import { updateShopSettings } from '@/actions/updateShopSettings';
+import { Settings, Save, AlertCircle } from 'lucide-react';
+import { redirect } from 'next/navigation';
 
-export default function Page() {
+export const dynamic = 'force-dynamic';
+
+export default async function SettingsPage() {
+  const session = await getServerSession(authOptions);
+  if (!session) redirect('/login');
+  
+  const shopId = (session.user as any).shopId;
+  const shop = await prisma.shop.findUnique({ where: { id: shopId } });
+  
+  if (!shop) return <div>Không tìm thấy dữ liệu cửa hàng.</div>;
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <h1 className="page-title text-3xl font-black text-slate-800">Cài đặt Hệ thống</h1>
-      <div className="card p-16 flex flex-col items-center justify-center text-center space-y-6 mt-8 shadow-xl border-dashed border-2 border-slate-300">
-        <div className="w-32 h-32 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
-          <Construction size={64} />
-        </div>
-        <h2 className="text-3xl font-black text-slate-800">Tính năng đang được thiết lập</h2>
-        <p className="text-xl text-slate-500 font-medium max-w-lg">Module <strong>Cài đặt Hệ thống</strong> đang trong quá trình phát triển. Vui lòng quay lại sau!</p>
+    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
+      <div>
+        <h1 className="page-title flex items-center gap-3"><Settings className="text-blue-600" /> Cài Đặt Cửa Hàng</h1>
+        <p className="page-subtitle">Thông tin tại đây sẽ được in trực tiếp lên các loại Biên lai (K80).</p>
+      </div>
+
+      <div className="card p-8 border-2 border-slate-200">
+        <form action={updateShopSettings} className="space-y-6">
+          <div className="input-group">
+            <label className="input-label text-xl">Tên Cửa Hàng (In trên Biên lai) *</label>
+            <input required name="name" type="text" className="input text-2xl font-bold p-6" defaultValue={shop.name} />
+          </div>
+          
+          <div className="input-group">
+            <label className="input-label text-xl">Số Điện Thoại Liên Hệ</label>
+            <input name="phone" type="text" className="input text-2xl font-bold p-6" defaultValue={shop.phone || ''} />
+          </div>
+          
+          <div className="input-group">
+            <label className="input-label text-xl">Địa Chỉ Cửa Hàng</label>
+            <input name="address" type="text" className="input text-2xl font-bold p-6" defaultValue={shop.address || ''} />
+          </div>
+
+          <div className="bg-yellow-50 text-yellow-800 p-4 rounded-xl border border-yellow-200 flex items-start gap-3 mt-4">
+            <AlertCircle className="shrink-0 mt-0.5" />
+            <p className="font-medium text-lg">Mọi thay đổi sẽ có hiệu lực ngay lập tức. Khuyến nghị chỉ cấp quyền Sửa thông tin này cho Chủ cửa hàng.</p>
+          </div>
+          
+          <div className="pt-6 border-t border-slate-200">
+            <button type="submit" className="w-full btn btn-lg bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl py-8 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20 active:scale-[0.98] transition-transform">
+              <Save size={32} /> LƯU CÀI ĐẶT
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
