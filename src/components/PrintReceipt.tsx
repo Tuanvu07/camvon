@@ -37,11 +37,11 @@ export default function PrintReceipt() {
   if (!data) return null;
 
   return (
-    <div className="hidden print:block print-bill">
+    <div className="hidden print:block print:w-[80mm] print:text-black print:bg-white text-sm font-mono mx-auto">
       {/* Header */}
       <div className="text-center border-b-2 border-black pb-2 mb-2">
         <h1 className="text-xl font-bold uppercase">{data.shopName}</h1>
-        <div className="text-sm">BIÊN LAI GIAO DỊCH</div>
+        <div className="text-sm font-bold">BIÊN LAI GIAO DỊCH</div>
         <div className="text-xs mt-1">Mã GD: {data.transactionId.slice(-8).toUpperCase()}</div>
       </div>
 
@@ -80,7 +80,7 @@ export default function PrintReceipt() {
       <div className="text-center text-sm mt-4">
         <div>Khách hàng ký nhận</div>
         <div className="h-16"></div>
-        <div className="text-xs italic">Cảm ơn quý khách đã sử dụng dịch vụ!</div>
+        <div className="text-xs italic font-bold">Cảm ơn quý khách đã sử dụng dịch vụ!</div>
       </div>
     </div>
   );
