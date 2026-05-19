@@ -58,7 +58,7 @@ export default function CameraCapture() {
     
     setIsProcessing(true);
     try {
-      const newImages = [];
+      const newImages: string[] = [];
       for (let i = 0; i < e.target.files.length; i++) {
         const file = e.target.files[i];
         if (!file.type.startsWith('image/')) continue;
