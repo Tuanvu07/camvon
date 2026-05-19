@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { PieChart, PlusCircle, MinusCircle, ShieldAlert } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { adjustCapital } from '@/actions/adjustCapital';
+import SubmitButton from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -54,9 +55,12 @@ export default async function CapitalPage() {
                 <label className="block font-bold text-emerald-800 text-lg mb-2">Lý do (Tùy chọn)</label>
                 <input name="description" type="text" className="w-full p-4 text-xl font-bold rounded-xl border-2 border-emerald-200 outline-none" defaultValue="Bơm vốn kinh doanh" />
               </div>
-              <button type="submit" className="w-full btn bg-emerald-600 hover:bg-emerald-700 text-white font-black py-6 rounded-2xl flex items-center justify-center gap-2 text-2xl shadow-xl shadow-emerald-500/30 mt-4 active:scale-[0.98] transition-transform">
-                XÁC NHẬN NẠP VỐN
-              </button>
+              <div className="pt-4">
+                <SubmitButton 
+                  text="XÁC NHẬN NẠP VỐN" 
+                  className="w-full btn bg-emerald-600 hover:bg-emerald-700 text-white font-black py-6 rounded-2xl flex items-center justify-center gap-2 text-2xl shadow-xl shadow-emerald-500/30 active:scale-[0.98]" 
+                />
+              </div>
             </form>
           </div>
 
@@ -72,9 +76,12 @@ export default async function CapitalPage() {
                 <label className="block font-bold text-red-800 text-lg mb-2">Lý do (Tùy chọn)</label>
                 <input name="description" type="text" className="w-full p-4 text-xl font-bold rounded-xl border-2 border-red-200 outline-none" defaultValue="Rút lợi nhuận" />
               </div>
-              <button type="submit" className="w-full btn bg-red-600 hover:bg-red-700 text-white font-black py-6 rounded-2xl flex items-center justify-center gap-2 text-2xl shadow-xl shadow-red-500/30 mt-4 active:scale-[0.98] transition-transform">
-                XÁC NHẬN RÚT VỐN
-              </button>
+              <div className="pt-4">
+                <SubmitButton 
+                  text="XÁC NHẬN RÚT VỐN" 
+                  className="w-full btn bg-red-600 hover:bg-red-700 text-white font-black py-6 rounded-2xl flex items-center justify-center gap-2 text-2xl shadow-xl shadow-red-500/30 active:scale-[0.98]" 
+                />
+              </div>
             </form>
           </div>
         </div>

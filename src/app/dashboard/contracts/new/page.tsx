@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createContractAction } from '@/actions/createContract';
 import CCCDScanner from '@/components/CCCDScanner';
 import { User, FileText, Landmark, Banknote } from 'lucide-react';
+import SubmitButton from '@/components/SubmitButton';
 
 export default function NewContractPage() {
   const [kycData, setKycData] = useState<any>({});
@@ -134,14 +135,10 @@ export default function NewContractPage() {
 
               {/* Submit */}
               <div className="pt-4">
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="w-full btn btn-lg bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl py-8 rounded-2xl shadow-xl shadow-blue-500/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
-                >
-                  <Banknote size={32} />
-                  {isSubmitting ? 'ĐANG TẠO HỢP ĐỒNG...' : 'TẠO HỢP ĐỒNG & GIẢI NGÂN'}
-                </button>
+                <SubmitButton 
+                  text="TẠO HỢP ĐỒNG & GIẢI NGÂN"
+                  className="w-full btn btn-lg bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl py-8 rounded-2xl shadow-xl shadow-blue-500/30 flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
+                />
               </div>
 
             </div>

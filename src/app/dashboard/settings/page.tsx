@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { updateShopSettings } from '@/actions/updateShopSettings';
 import { Settings, Save, AlertCircle } from 'lucide-react';
 import { redirect } from 'next/navigation';
+import SubmitButton from '@/components/SubmitButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,9 +47,10 @@ export default async function SettingsPage() {
           </div>
           
           <div className="pt-6 border-t border-slate-200">
-            <button type="submit" className="w-full btn btn-lg bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl py-8 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20 active:scale-[0.98] transition-transform">
-              <Save size={32} /> LƯU CÀI ĐẶT
-            </button>
+            <SubmitButton 
+              text="LƯU CÀI ĐẶT" 
+              className="w-full btn btn-lg bg-blue-600 hover:bg-blue-700 text-white font-black text-2xl py-8 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-blue-500/20 active:scale-[0.98]" 
+            />
           </div>
         </form>
       </div>
