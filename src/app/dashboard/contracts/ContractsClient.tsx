@@ -7,11 +7,10 @@ import {
   AlertTriangle, TrendingDown, Skull, Eye, Printer, Trash2, MessageSquare
 } from 'lucide-react';
 import { cn, formatCurrency, formatDate, formatInterestRate, CONTRACT_STATUS_LABELS } from '@/lib/utils';
-import { calcAccruedInterest, overdueDays } from '@/lib/math';
-import type { RateType, InterestCycle, ContractStatus } from '@/types';
 import QuickCollectionModal from '@/components/QuickCollectionModal';
 import { sendManualReminder } from '@/actions/sendManualReminder';
 import { renewContract } from '@/actions/renewContract';
+import { payPartialPrincipal } from '@/actions/payPartialPrincipal';
 import SubmitButton from '@/components/SubmitButton';
 
 export type ContractRow = {
@@ -61,6 +60,7 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
   const [tab, setTab] = useState<string>('ALL');
   const [search, setSearch] = useState('');
   const [selectedContract, setSelectedContract] = useState<ContractRow | null>(null);
+  const [partialPayContract, setPartialPayContract] = useState<ContractRow | null>(null);
 
   const counts: Record<string, number> = useMemo(() => {
     const c: Record<string, number> = { ALL: contracts.length };
@@ -207,6 +207,14 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
                           <input type="hidden" name="contractId" value={c.id} />
                           <SubmitButton text="Gia hạn" className="px-2 py-1 text-xs font-bold rounded bg-amber-100 text-amber-700 hover:bg-amber-200" />
                         </form>
+
+                        <button 
+                          onClick={() => setPartialPayContract(c)}
+                          className="px-2 py-1 text-xs font-bold rounded bg-teal-100 text-teal-700 hover:bg-teal-200 mr-1" 
+                          title="Trả bớt gốc"
+                        >
+                          Trả bớt gốc
+                        </button>
                         
                         <button 
                           onClick={() => setSelectedContract(c)}
@@ -239,6 +247,58 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
           onClose={() => setSelectedContract(null)} 
           onSuccess={() => setSelectedContract(null)} 
         />
+      )}
+
+      {/* Partial Pay Modal */}
+      {partialPayContract && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-teal-50/50">
+              <h3 className="text-xl font-bold text-teal-800">Trả bớt nợ gốc</h3>
+              <button onClick={() => setPartialPayContract(null)} className="text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white transition-colors">✕</button>
+            </div>
+            <form action={async (formData) => {
+              const res = await payPartialPrincipal(formData);
+              if (res.error) alert(res.error);
+              else {
+                alert('Đã thu bớt gốc thành công!');
+                setPartialPayContract(null);
+              }
+            }} className="p-6 space-y-6">
+              <input type="hidden" name="contractId" value={partialPayContract.id} />
+              
+              <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
+                <div className="text-sm font-semibold text-slate-500 mb-1">Dư nợ gốc hiện tại:</div>
+                <div className="text-3xl font-black text-red-600">{formatCurrency(partialPayContract.pawningAmount)}</div>
+              </div>
+
+              <div>
+                <label className="text-sm font-bold text-slate-700 mb-3 block text-center">Khách hàng muốn trả bớt bao nhiêu?</label>
+                <input 
+                  type="text" 
+                  name="amount" 
+                  autoFocus
+                  required
+                  placeholder="Ví dụ: 5,000,000"
+                  className="w-full text-center text-4xl font-black text-teal-600 bg-white border-2 border-slate-200 rounded-2xl py-4 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/20 outline-none transition-all shadow-inner"
+                  onInput={(e) => {
+                    let val = e.currentTarget.value.replace(/[^0-9]/g, '');
+                    if (val) {
+                      e.currentTarget.value = new Intl.NumberFormat('vi-VN').format(Number(val));
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button type="button" onClick={() => setPartialPayContract(null)} className="flex-1 py-4 text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 rounded-2xl transition-all">Hủy bỏ</button>
+                <div className="flex-[2]">
+                  <SubmitButton text="Xác nhận thu gốc" className="w-full py-4 text-white font-bold bg-teal-600 hover:bg-teal-700 rounded-2xl transition-all shadow-lg shadow-teal-600/30 text-lg" />
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

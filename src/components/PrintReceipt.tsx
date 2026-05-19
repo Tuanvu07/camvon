@@ -45,6 +45,8 @@ export default function PrintReceipt() {
     title = 'PHIẾU CHUỘC ĐỒ (TẤT TOÁN)';
   } else if (data.typeLabel.toLowerCase().includes('giải ngân')) {
     title = 'PHIẾU GIẢI NGÂN';
+  } else if (data.typeLabel.toLowerCase().includes('bớt gốc')) {
+    title = 'PHIẾU THU BỚT GỐC';
   }
 
   return (
@@ -82,8 +84,14 @@ export default function PrintReceipt() {
         <div className="text-xl font-bold text-right border-b border-black pb-2">
           {formatCurrency(data.amount)}
         </div>
-        {data.note && (
-          <div className="text-xs mt-2 italic">Ghi chú: {data.note}</div>
+        
+        {title === 'PHIẾU THU BỚT GỐC' && data.note ? (
+          <div className="mt-2 pt-2 border-t border-dashed border-black">
+            <div className="text-xs italic font-bold">Chi tiết hợp đồng:</div>
+            <div className="text-xs mt-1">{data.note}</div>
+          </div>
+        ) : (
+          data.note && <div className="text-xs mt-2 italic">Ghi chú: {data.note}</div>
         )}
       </div>
 
