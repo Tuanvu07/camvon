@@ -7,6 +7,8 @@ import {
   AlertTriangle, TrendingDown, Skull, Eye, Printer, Trash2, MessageSquare
 } from 'lucide-react';
 import { cn, formatCurrency, formatDate, formatInterestRate, CONTRACT_STATUS_LABELS } from '@/lib/utils';
+import { calcAccruedInterest, overdueDays } from '@/lib/math';
+import type { RateType, InterestCycle, ContractStatus } from '@/types';
 import QuickCollectionModal from '@/components/QuickCollectionModal';
 import { sendManualReminder } from '@/actions/sendManualReminder';
 import { renewContract } from '@/actions/renewContract';
