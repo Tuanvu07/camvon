@@ -1,10 +1,12 @@
 import Sidebar from '@/components/Layouts/Sidebar';
 import Header from '@/components/Layouts/Header';
 import PrintReceipt from '@/components/PrintReceipt';
+import IdleTimeout from '@/components/IdleTimeout';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="print:bg-white">
+    <div className="print:bg-white relative">
+      <IdleTimeout />
       <div className="print:hidden">
         <Sidebar />
         <Header />
