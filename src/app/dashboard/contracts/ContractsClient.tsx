@@ -4,12 +4,13 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Plus, Search, Download, FileText, Clock,
-  AlertTriangle, TrendingDown, Skull, Eye, Printer, Trash2
+  AlertTriangle, TrendingDown, Skull, Eye, Printer, Trash2, MessageSquare
 } from 'lucide-react';
 import { cn, formatCurrency, formatDate, formatInterestRate, CONTRACT_STATUS_LABELS } from '@/lib/utils';
 import { calcAccruedInterest, overdueDays } from '@/lib/math';
 import type { RateType, InterestCycle, ContractStatus } from '@/types';
 import QuickCollectionModal from '@/components/QuickCollectionModal';
+import { sendManualReminder } from '@/actions/sendManualReminder';
 
 export type ContractRow = {
   id: string; shopId: string; contractCode: string;
@@ -183,6 +184,18 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
                     </td>
                     <td>
                       <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {(c.status === 'INTEREST_DUE' || c.status === 'BAD_DEBT') && (
+                          <form action={async (formData) => { 
+                            const res = await sendManualReminder(formData);
+                            if (res.error) alert(res.error);
+                            else alert('Đã gửi tin nhắn nhắc nợ thành công qua Zalo/SMS!');
+                          }} className="inline m-0 p-0">
+                            <input type="hidden" name="contractId" value={c.id} />
+                            <button type="submit" className="btn-icon text-orange-500 hover:bg-orange-50" title="Nhắn tin nhắc nợ">
+                              <MessageSquare size={14} />
+                            </button>
+                          </form>
+                        )}
                         <button 
                           onClick={() => setSelectedContract(c)}
                           className="btn-icon text-emerald-600 hover:bg-emerald-50" 

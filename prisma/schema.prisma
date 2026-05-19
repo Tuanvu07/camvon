@@ -190,6 +190,7 @@ model Contract {
   // Trạng thái & metadata
   status          String   @default("ACTIVE") // ACTIVE | INTEREST_DUE | PENDING_LIQUIDATION | OLD_DEBT | BAD_DEBT | CLOSED | LIQUIDATED
   note            String?
+  nextRemindDate  DateTime?
   createdByUserId String?
   importedFrom    String?
   createdAt       DateTime @default(now())
