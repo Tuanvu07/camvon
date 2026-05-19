@@ -2,7 +2,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
-import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { getVNTodayBoundary, formatVNDate } from '@/lib/timezone';
 import Link from 'next/link';
 import { Wallet, TrendingUp, TrendingDown, Clock, Search } from 'lucide-react';
 import PrintButton from '@/components/PrintButton';
@@ -51,16 +52,15 @@ export default async function CashbookPage() {
     return <div className="p-8 text-center text-red-500 font-bold">Không tìm thấy thông tin Cửa hàng.</div>;
   }
 
-  // Calculate some simple stats for today
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Cố định múi giờ VN cho hôm nay
+  const { startOfDay } = getVNTodayBoundary();
 
   const todayIncome = transactions
-    .filter(t => new Date(t.createdAt) >= today && TX_INFO[t.type]?.sign === '+')
+    .filter(t => new Date(t.createdAt) >= startOfDay && TX_INFO[t.type]?.sign === '+')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const todayExpense = transactions
-    .filter(t => new Date(t.createdAt) >= today && TX_INFO[t.type]?.sign === '-')
+    .filter(t => new Date(t.createdAt) >= startOfDay && TX_INFO[t.type]?.sign === '-')
     .reduce((sum, t) => sum + t.amount, 0);
 
   return (
@@ -138,7 +138,7 @@ export default async function CashbookPage() {
             <tbody className="divide-y divide-slate-100">
               {transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-slate-400">
+                  <td colSpan={6} className="text-center py-12 text-slate-400">
                     <Clock size={40} className="mx-auto mb-3 opacity-20" />
                     <div className="text-lg font-medium">Chưa có giao dịch nào</div>
                   </td>
@@ -149,7 +149,7 @@ export default async function CashbookPage() {
                   return (
                     <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="py-4">
-                        <div className="font-bold text-slate-700">{formatDateTime(tx.transactionDate || tx.createdAt)}</div>
+                        <div className="font-bold text-slate-700">{formatVNDate(tx.transactionDate || tx.createdAt)}</div>
                       </td>
                       <td className="py-4">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-sm font-bold ${info.color} ${info.bg}`}>

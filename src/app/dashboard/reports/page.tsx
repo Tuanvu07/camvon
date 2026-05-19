@@ -2,7 +2,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/db';
 import { redirect } from 'next/navigation';
-import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { getVNTodayBoundary, formatVNDate } from '@/lib/timezone';
 import { FileText, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -22,12 +23,11 @@ export default async function ReportPage() {
   });
   const role = shopUser?.role || 'STAFF'; // OWNER | ADMIN | STAFF
 
-  // Blind trust: Lấy từ 0h hôm nay
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Giải quyết lỗi lệch múi giờ trên Production Vercel (UTC) so với VN (UTC+7)
+  const { startOfDay, endOfDay } = getVNTodayBoundary();
 
   // Nếu là STAFF, chỉ xem giao dịch do chính mình thực hiện. Nếu là OWNER/ADMIN thì xem hết ca của shop.
-  const whereClause: any = { shopId, createdAt: { gte: today } };
+  const whereClause: any = { shopId, createdAt: { gte: startOfDay, lte: endOfDay } };
   if (role === 'STAFF') {
     whereClause.userId = userId;
   }
@@ -119,7 +119,7 @@ export default async function ReportPage() {
                 const isIn = IN_TYPES.includes(tx.type);
                 return (
                   <tr key={tx.id}>
-                    <td className="font-medium">{formatDateTime(tx.createdAt)}</td>
+                    <td className="font-medium">{formatVNDate(tx.createdAt)}</td>
                     <td className="font-bold text-blue-600">{tx.contract?.contractCode || '--'}</td>
                     <td>{tx.description}</td>
                     <td className={`text-right font-black font-mono text-lg ${isIn ? 'text-emerald-600' : 'text-red-600'}`}>

@@ -1,6 +1,7 @@
 'use client';
 
-import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { formatVNDate } from '@/lib/timezone';
 import { useEffect, useState } from 'react';
 
 export interface PrintReceiptData {
@@ -49,7 +50,7 @@ export default function PrintReceipt() {
       <div className="space-y-1 mb-3 text-sm">
         <div className="flex justify-between">
           <span>Ngày:</span>
-          <span className="font-bold">{formatDateTime(data.date)}</span>
+          <span className="font-bold">{formatVNDate(data.date)}</span>
         </div>
         <div className="flex justify-between">
           <span>Hợp đồng:</span>
