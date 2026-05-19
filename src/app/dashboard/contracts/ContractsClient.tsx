@@ -11,6 +11,8 @@ import { calcAccruedInterest, overdueDays } from '@/lib/math';
 import type { RateType, InterestCycle, ContractStatus } from '@/types';
 import QuickCollectionModal from '@/components/QuickCollectionModal';
 import { sendManualReminder } from '@/actions/sendManualReminder';
+import { renewContract } from '@/actions/renewContract';
+import SubmitButton from '@/components/SubmitButton';
 
 export type ContractRow = {
   id: string; shopId: string; contractCode: string;
@@ -196,13 +198,24 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
                             </button>
                           </form>
                         )}
+                        
+                        <form action={async (formData) => { 
+                          const res = await renewContract(formData);
+                          if (res.error) alert(res.error);
+                          else alert('Đã thu lãi và gia hạn thành công!');
+                        }} className="inline m-0 p-0 mr-1">
+                          <input type="hidden" name="contractId" value={c.id} />
+                          <SubmitButton text="Gia hạn" className="px-2 py-1 text-xs font-bold rounded bg-amber-100 text-amber-700 hover:bg-amber-200" />
+                        </form>
+                        
                         <button 
                           onClick={() => setSelectedContract(c)}
-                          className="btn-icon text-emerald-600 hover:bg-emerald-50" 
-                          title="Thu tiền nhanh"
+                          className="px-2 py-1 text-xs font-bold rounded bg-slate-800 text-white hover:bg-slate-700 mr-1" 
+                          title="Tất toán hợp đồng"
                         >
-                          💰
+                          Chuộc đồ
                         </button>
+
                         <Link href={`/dashboard/contracts/${c.id}`} className="btn-icon text-blue-600 hover:bg-blue-50" title="Xem"><Eye size={14} /></Link>
                         <button className="btn-icon text-slate-500 hover:bg-slate-100" title="In bill"><Printer size={14} /></button>
                       </div>
