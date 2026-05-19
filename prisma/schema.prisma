@@ -208,6 +208,7 @@ model Contract {
   @@index([shopId, status])
   @@index([shopId, customerId])
   @@index([shopId, interestDueDate])
+  @@index([interestDueDate])
   @@map("contracts")
 }
 
@@ -238,6 +239,7 @@ model Transaction {
   @@index([shopId, transactionDate])
   @@index([shopId, type])
   @@index([contractId])
+  @@index([shopId, createdAt])
   @@map("transactions")
 }
 
