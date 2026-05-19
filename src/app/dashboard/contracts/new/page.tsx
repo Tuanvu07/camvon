@@ -5,6 +5,7 @@ import { createContractAction } from '@/actions/createContract';
 import CCCDScanner from '@/components/CCCDScanner';
 import { User, FileText, Landmark, Banknote } from 'lucide-react';
 import SubmitButton from '@/components/SubmitButton';
+import CameraCapture from '@/components/CameraCapture';
 
 export default function NewContractPage() {
   const [kycData, setKycData] = useState<any>({});
@@ -78,8 +79,8 @@ export default function NewContractPage() {
               
               {/* Tài Sản */}
               <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-1 input-group">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-1 input-group">
                     <label className="input-label">Loại Tài Sản</label>
                     <select name="assetType" className="select font-bold">
                       <option value="XM">Xe Máy</option>
@@ -90,10 +91,14 @@ export default function NewContractPage() {
                       <option value="KHAC">Khác</option>
                     </select>
                   </div>
-                  <div className="col-span-2 input-group">
+                  <div className="md:col-span-2 input-group">
                     <label className="input-label">Tên / Mô Tả Tài Sản *</label>
                     <input required name="assetName" type="text" className="input" placeholder="VD: Xe AirBlade Đỏ Đen 2022" />
                   </div>
+                </div>
+
+                <div className="pt-2">
+                  <CameraCapture />
                 </div>
               </div>
 

@@ -24,6 +24,7 @@ export async function createContractAction(formData: FormData) {
   const interestRateValue = parseFloat(formData.get('interestRateValue') as string);
   const interestRateType = formData.get('interestRateType') as string;
   const interestCycle = formData.get('interestCycle') as string;
+  const assetImages = formData.get('assetImages') as string || '[]';
   
   if (!fullName || !pawningAmount) throw new Error('Thiếu thông tin quan trọng');
 
@@ -65,6 +66,7 @@ export async function createContractAction(formData: FormData) {
         assetType,
         assetName,
         assetModel: assetName,
+        assetImages,
         pawningAmount,
         interestRateType,
         interestRateValue,

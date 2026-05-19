@@ -153,6 +153,31 @@ export default async function ContractDetailPage({ params }: { params: { id: str
         </div>
       </div>
 
+      {/* Asset Images Proof */}
+      {(() => {
+        let images: string[] = [];
+        try { images = JSON.parse(contract.assetImages || '[]'); } catch (e) {}
+        if (images.length === 0) return null;
+        
+        return (
+          <div className="card overflow-hidden border-2 border-teal-100">
+            <div className="card-header bg-teal-50 border-b border-teal-100">
+              <h2 className="card-title text-teal-800 flex items-center gap-2">📷 Bằng Chứng Trạng Thái Tài Sản</h2>
+            </div>
+            <div className="card-body bg-slate-50">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {images.map((src, idx) => (
+                  <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border-4 border-white shadow-md hover:scale-[1.75] hover:z-50 transition-transform duration-300 origin-center cursor-zoom-in">
+                    <img src={src} alt={`Bằng chứng ${idx + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-slate-500 mt-4 italic">* Hình ảnh được chụp tại thời điểm bàn giao tài sản. Sử dụng làm đối chứng nếu có khiếu nại.</p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Transaction history */}
       {contract.transactions.length > 0 && (
         <div className="card overflow-hidden">
