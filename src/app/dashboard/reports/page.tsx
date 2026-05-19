@@ -49,16 +49,24 @@ export default async function ReportPage() {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
-      <div>
-        <h1 className="page-title flex items-center gap-3">
-          <FileText className="text-blue-600"/> 
-          Báo Cáo Đối Soát Chốt Ca
-        </h1>
-        <p className="page-subtitle text-lg font-medium text-slate-500 mt-2">
-          Ca làm việc của: <span className="text-slate-800 font-bold">{userName}</span> 
-          {role === 'STAFF' && <span className="ml-2 text-red-500 text-sm">(Chế độ mù: Chỉ thấy số liệu cá nhân)</span>}
-          {role !== 'STAFF' && <span className="ml-2 text-emerald-600 text-sm">(Chế độ quản lý: Toàn bộ cửa hàng)</span>}
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="page-title flex items-center gap-3">
+            <FileText className="text-blue-600"/> 
+            Báo Cáo Đối Soát Chốt Ca
+          </h1>
+          <p className="page-subtitle text-lg font-medium text-slate-500 mt-2">
+            Ca làm việc của: <span className="text-slate-800 font-bold">{userName}</span> 
+            {role === 'STAFF' && <span className="ml-2 text-red-500 text-sm">(Chế độ mù: Chỉ thấy số liệu cá nhân)</span>}
+            {role !== 'STAFF' && <span className="ml-2 text-emerald-600 text-sm">(Chế độ quản lý: Toàn bộ cửa hàng)</span>}
+          </p>
+        </div>
+
+        {role !== 'STAFF' && (
+          <a href="/api/export/csv" download className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg rounded-2xl shadow-xl shadow-slate-900/20 active:scale-95 transition-all">
+            📥 Tải Sổ Sách Về Máy (Excel/CSV)
+          </a>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
