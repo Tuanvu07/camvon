@@ -15,7 +15,7 @@ export async function liquidateContract(formData: FormData) {
     
     const contractId = formData.get('contractId') as string;
     const amount = parseFloat(formData.get('amount') as string);
-    if (!contractId || amount <= 0) throw new Error('Giá bán không hợp lệ');
+    if (!contractId || isNaN(amount) || amount <= 0) throw new Error('Giá bán không hợp lệ');
 
     await prisma.$transaction(async (tx) => {
       await tx.contract.update({
