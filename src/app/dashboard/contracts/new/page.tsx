@@ -43,7 +43,7 @@ export default function NewContractPage() {
             <div className="card-body space-y-5">
               <CCCDScanner onScan={handleScan} />
 
-              <div className="space-y-4 pt-4 border-t border-slate-100">
+              <div key={kycData.cccd || kycData.fullName || 'default-kyc'} className="space-y-4 pt-6 mt-4 border-t-2 border-dashed border-slate-200">
                 <div className="input-group">
                   <label className="input-label">Họ và Tên Khách Hàng *</label>
                   <input required name="fullName" type="text" className="input font-bold text-lg" defaultValue={kycData.fullName || ''} placeholder="NGUYỄN VĂN A" />
@@ -52,11 +52,11 @@ export default function NewContractPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="input-group">
                     <label className="input-label">Số CCCD *</label>
-                    <input required name="cccd" type="text" className="input font-mono" defaultValue={kycData.cccd || ''} placeholder="079012345678" />
+                    <input required name="cccd" type="text" className="input font-mono font-bold text-blue-700" defaultValue={kycData.cccd || ''} placeholder="079012345678" />
                   </div>
                   <div className="input-group">
                     <label className="input-label">Số Điện Thoại *</label>
-                    <input required name="phone" type="tel" className="input font-mono font-bold" placeholder="0901234567" />
+                    <input required name="phone" type="tel" className="input font-mono font-bold" defaultValue={kycData.phone || ''} placeholder="0901234567" />
                   </div>
                 </div>
 
