@@ -67,6 +67,20 @@ export async function payPartialPrincipal(formData: FormData) {
           }
         }
       });
+
+      // 4. Ghi Audit Log (Immutable)
+      await tx.auditLog.create({
+        data: {
+          shopId,
+          userId,
+          contractId: contract.id,
+          action: 'PAY_PARTIAL_PRINCIPAL',
+          entity: 'Contract',
+          entityId: contract.id,
+          oldData: JSON.stringify({ pawningAmount: contract.pawningAmount }),
+          newData: JSON.stringify({ pawningAmount: remainingAmount, paidAmount: amount })
+        }
+      });
     });
 
     revalidatePath('/dashboard/contracts');

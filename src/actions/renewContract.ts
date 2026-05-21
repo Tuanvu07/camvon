@@ -83,6 +83,20 @@ export async function renewContract(formData: FormData) {
           }
         }
       });
+
+      // Ghi Audit Log (Immutable)
+      await tx.auditLog.create({
+        data: {
+          shopId,
+          userId,
+          contractId: contract.id,
+          action: 'RENEW_CONTRACT',
+          entity: 'Contract',
+          entityId: contract.id,
+          oldData: JSON.stringify({ interestDueDate: contract.interestDueDate, totalInterestPaid: contract.totalInterestPaid }),
+          newData: JSON.stringify({ interestDueDate: newDueDate, totalInterestPaid: contract.totalInterestPaid + interestAmount, collectedInterest: interestAmount })
+        }
+      });
     });
 
     revalidatePath('/dashboard/contracts');

@@ -37,6 +37,18 @@ export async function liquidateContract(formData: FormData) {
         where: { id: shopId },
         data: { cashBalance: { increment: amount } }
       });
+      await tx.auditLog.create({
+        data: {
+          shopId,
+          userId,
+          contractId,
+          action: 'LIQUIDATE_CONTRACT',
+          entity: 'Contract',
+          entityId: contractId,
+          oldData: JSON.stringify({ status: 'PENDING_LIQUIDATION' }),
+          newData: JSON.stringify({ status: 'LIQUIDATED', soldAmount: amount })
+        }
+      });
     });
     
     revalidatePath('/dashboard/liquidations');
