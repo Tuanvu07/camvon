@@ -14,6 +14,7 @@ export default function NewContractPage() {
   const [kycData, setKycData] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [blacklistWarning, setBlacklistWarning] = useState<{ isBlacklisted: boolean, count: number } | null>(null);
   const router = useRouter();
 
   const handleScan = (data: any) => {
@@ -23,6 +24,38 @@ export default function NewContractPage() {
       address: data.address
     });
   };
+
+  // CHECK BLACKLIST TỰ ĐỘNG
+  useEffect(() => {
+    async function checkBlacklist() {
+      if (!kycData.cccd && !kycData.phone) {
+        setBlacklistWarning(null);
+        return;
+      }
+      try {
+        const query = new URLSearchParams();
+        if (kycData.cccd) query.append('cccd', kycData.cccd);
+        if (kycData.phone) query.append('phone', kycData.phone);
+        
+        const res = await fetch(`/api/customers/check-blacklist?${query.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.isBlacklisted) {
+            setBlacklistWarning({ isBlacklisted: true, count: data.badDebtCount });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            setBlacklistWarning(null);
+          }
+        }
+      } catch (err) {
+        console.error('Blacklist check failed', err);
+      }
+    }
+    
+    // Debounce nhẹ
+    const timeout = setTimeout(checkBlacklist, 500);
+    return () => clearTimeout(timeout);
+  }, [kycData.cccd, kycData.phone]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -76,6 +109,20 @@ export default function NewContractPage() {
               <CCCDScanner onScan={handleScan} />
 
               <div key={kycData.cccd || kycData.fullName || 'default-kyc'} className="space-y-4 pt-6 mt-4 border-t-2 border-dashed border-slate-200">
+                
+                {/* BLACKLIST WARNING BANNER */}
+                {blacklistWarning && blacklistWarning.isBlacklisted && (
+                  <div className="bg-rose-600 text-white p-4 rounded-xl shadow-lg border-2 border-rose-400 animate-pulse-fast flex items-start gap-3">
+                    <AlertCircle className="shrink-0 w-6 h-6" />
+                    <div>
+                      <h3 className="font-black text-lg uppercase">🚨 CẢNH BÁO TÍN DỤNG ĐEN</h3>
+                      <p className="font-medium text-sm mt-0.5">
+                        Khách hàng này đã từng có <span className="font-black text-xl px-1">{blacklistWarning.count}</span> tài sản bị thanh lý do nợ xấu/quá hạn. Cân nhắc kỹ trước khi giải ngân!
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="input-group">
                   <label className="input-label">Họ và Tên Khách Hàng *</label>
                   <input required name="fullName" type="text" className="input font-bold text-lg" defaultValue={kycData.fullName || ''} placeholder="NGUYỄN VĂN A" />
@@ -84,11 +131,27 @@ export default function NewContractPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="input-group">
                     <label className="input-label">Số CCCD *</label>
-                    <input required name="cccd" type="text" className="input font-mono font-bold text-blue-700" defaultValue={kycData.cccd || ''} placeholder="079012345678" />
+                    <input 
+                      required 
+                      name="cccd" 
+                      type="text" 
+                      className="input font-mono font-bold text-blue-700" 
+                      defaultValue={kycData.cccd || ''} 
+                      onChange={(e) => setKycData((prev: any) => ({ ...prev, cccd: e.target.value }))}
+                      placeholder="079012345678" 
+                    />
                   </div>
                   <div className="input-group">
                     <label className="input-label">Số Điện Thoại *</label>
-                    <input required name="phone" type="tel" className="input font-mono font-bold" defaultValue={kycData.phone || ''} placeholder="0901234567" />
+                    <input 
+                      required 
+                      name="phone" 
+                      type="tel" 
+                      className="input font-mono font-bold" 
+                      defaultValue={kycData.phone || ''} 
+                      onChange={(e) => setKycData((prev: any) => ({ ...prev, phone: e.target.value }))}
+                      placeholder="0901234567" 
+                    />
                   </div>
                 </div>
 

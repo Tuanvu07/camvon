@@ -100,6 +100,7 @@ model Customer {
   phone2      String?
   email       String?
   status      String   @default("NORMAL") // NORMAL | VIP | BLACKLIST
+  badDebtCount Int     @default(0)
   note        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
