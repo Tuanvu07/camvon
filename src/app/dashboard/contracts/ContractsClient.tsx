@@ -1,14 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
-  Plus, Search, Download, FileText, Clock,
-  AlertTriangle, TrendingDown, Skull, Eye, Printer, Trash2, MessageSquare
+  FileText, Eye, Printer, MessageSquare
 } from 'lucide-react';
-import { cn, formatCurrency, formatDate, formatInterestRate, CONTRACT_STATUS_LABELS } from '@/lib/utils';
+import { cn, formatCurrency, formatDate, formatInterestRate } from '@/lib/utils';
 import { calcAccruedInterest, overdueDays } from '@/lib/math';
-import type { RateType, InterestCycle, ContractStatus } from '@/types';
 import QuickCollectionModal from '@/components/QuickCollectionModal';
 import { sendManualReminder } from '@/actions/sendManualReminder';
 import { renewContract } from '@/actions/renewContract';
@@ -24,23 +22,6 @@ export type ContractRow = {
   status: string; totalInterestPaid: number;
   customer: { fullName: string; phone?: string|null; cccdNumber?: string|null };
 };
-
-const STATUS_TABS = [
-  { key: 'ALL',                 label: 'Tất cả',        color: 'bg-slate-600' },
-  { key: 'ACTIVE',              label: 'Đang cầm',      color: 'bg-emerald-500' },
-  { key: 'INTEREST_DUE',        label: 'Chậm lãi phí',  color: 'bg-amber-500' },
-  { key: 'PENDING_LIQUIDATION', label: 'Chờ thanh lý',  color: 'bg-orange-500' },
-  { key: 'OLD_DEBT',            label: 'Nợ cũ',         color: 'bg-red-400' },
-  { key: 'BAD_DEBT',            label: 'Nợ xấu',        color: 'bg-red-700' },
-];
-
-const STAT_CARDS = [
-  { key: 'ACTIVE',              label: 'Đang cầm',      icon: <FileText size={22} />, cls: 'stat-card-blue' },
-  { key: 'INTEREST_DUE',        label: 'Đến hạn lãi',   icon: <Clock size={22} />,    cls: 'stat-card-amber' },
-  { key: 'PENDING_LIQUIDATION', label: 'Chờ thanh lý',  icon: <AlertTriangle size={22} />, cls: 'stat-card-orange' },
-  { key: 'OLD_DEBT',            label: 'Nợ cũ',         icon: <TrendingDown size={22} />,  cls: 'stat-card-red' },
-  { key: 'BAD_DEBT',            label: 'Nợ xấu',        icon: <Skull size={22} />,    cls: 'stat-card-rose' },
-];
 
 const STATUS_BADGE: Record<string, string> = {
   ACTIVE: 'status-badge status-active',
@@ -58,145 +39,72 @@ const STATUS_LBL: Record<string, string> = {
   REDEEMED: 'Đã chuộc', OLD_DEBT: 'Nợ cũ', BAD_DEBT: 'Nợ xấu',
 };
 
-export default function ContractsClient({ contracts, shopId }: { contracts: ContractRow[]; shopId: string }) {
-  const [tab, setTab] = useState<string>('ALL');
-  const [search, setSearch] = useState('');
+export default function ContractsClient({ contracts, totalCount, totalPawned }: { contracts: ContractRow[]; shopId: string; totalCount: number; totalPawned: number }) {
   const [selectedContract, setSelectedContract] = useState<ContractRow | null>(null);
   const [partialPayContract, setPartialPayContract] = useState<ContractRow | null>(null);
 
-  const counts: Record<string, number> = useMemo(() => {
-    const c: Record<string, number> = { ALL: contracts.length };
-    for (const s of ['ACTIVE','INTEREST_DUE','PENDING_LIQUIDATION','OLD_DEBT','BAD_DEBT']) {
-      c[s] = contracts.filter(x => x.status === s).length;
-    }
-    return c;
-  }, [contracts]);
-
-  const filtered = useMemo(() => {
-    let list = contracts;
-    if (tab !== 'ALL') list = list.filter(c => c.status === tab);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(c =>
-        c.contractCode.toLowerCase().includes(q) ||
-        c.customer?.fullName.toLowerCase().includes(q) ||
-        (c.customer?.phone ?? '').includes(q) ||
-        (c.assetPlate ?? '').toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [contracts, tab, search]);
-
-  const totalPawned = filtered.reduce((s, c) => s + c.pawningAmount, 0);
-
   return (
     <div className="space-y-5 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="page-title">Quản lý hợp đồng</h1>
-          <p className="page-subtitle">Tổng cộng {contracts.length} hợp đồng • {formatDate(new Date())}</p>
-        </div>
-        <div className="flex gap-2">
-          <button className="btn btn-outline btn-sm"><Download size={15} /> Xuất Excel</button>
-          <Link href="/dashboard/contracts/creation" className="btn btn-primary">
-            <Plus size={18} /> Cầm đồ mới
-          </Link>
-        </div>
-      </div>
-
-      {/* 5 Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 stagger-children">
-        {STAT_CARDS.map(card => (
-          <button key={card.key} onClick={() => setTab(card.key)}
-            className={cn('stat-card text-left w-full', card.cls, tab === card.key && 'ring-4 ring-white/40 scale-[1.02]')}>
-            <div className="mb-2 opacity-80">{card.icon}</div>
-            <div className="text-3xl font-black">{counts[card.key] ?? 0}</div>
-            <div className="text-xs font-semibold opacity-90 mt-1">{card.label}</div>
-          </button>
-        ))}
-      </div>
-
-      {/* Filter */}
-      <div className="card">
-        <div className="card-body py-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            {STATUS_TABS.map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                className={cn('px-3 py-1.5 rounded-lg text-sm font-semibold transition-all',
-                  tab === t.key ? `${t.color} text-white shadow-sm` : 'bg-slate-100 text-slate-600 hover:bg-slate-200')}>
-                {t.label} <span className="ml-1 text-xs opacity-80">({counts[t.key] ?? 0})</span>
-              </button>
-            ))}
-            <div className="relative flex-1 min-w-[200px]">
-              <input id="contract-search" value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Tìm mã HĐ, tên KH, số ĐT, biển số..." className="input pl-9 py-2 text-sm" />
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Table */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden shadow-xl border-slate-200">
         <div className="overflow-x-auto">
           <table className="lendos-table">
             <thead>
-              <tr>
-                <th>#</th><th>Mã HĐ</th><th>Khách hàng</th><th>SĐT</th>
-                <th>Loại</th><th>Tài sản</th><th>Tiền cầm</th><th>Lãi suất</th>
-                <th>Ngày cầm</th><th>Lãi đến HN</th><th>Tình trạng</th>
-                <th>Đóng lãi</th><th className="text-center">Thao tác</th>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="py-4">#</th><th className="py-4">Mã HĐ</th><th className="py-4">Khách hàng</th><th className="py-4">SĐT</th>
+                <th className="py-4">Loại</th><th className="py-4">Tài sản</th><th className="py-4 text-right">Tiền cầm</th><th className="py-4">Lãi suất</th>
+                <th className="py-4">Ngày cầm</th><th className="py-4 text-right">Lãi đến HN</th><th className="py-4">Tình trạng</th>
+                <th className="py-4">Đóng lãi</th><th className="text-center py-4">Thao tác</th>
               </tr>
             </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={13} className="text-center py-12 text-slate-400">
-                  <FileText size={36} className="mx-auto mb-2 opacity-20" />
-                  <div>Không có hợp đồng nào</div>
+            <tbody className="divide-y divide-slate-100">
+              {contracts.length === 0 ? (
+                <tr><td colSpan={13} className="text-center py-16 text-slate-400">
+                  <FileText size={48} className="mx-auto mb-3 opacity-20 text-slate-500" />
+                  <div className="text-lg font-bold text-slate-500">Không tìm thấy hợp đồng nào phù hợp</div>
                 </td></tr>
-              ) : filtered.map((c, idx) => {
+              ) : contracts.map((c, idx) => {
                 const accrued = calcAccruedInterest(
                   c.pawningAmount, c.interestRateType as any, c.interestRateValue,
                   c.interestCycle as any, new Date(c.startDate)
                 );
                 const od = overdueDays(c.interestDueDate ? new Date(c.interestDueDate) : null);
                 return (
-                  <tr key={c.id} className="group">
-                    <td className="text-slate-400 text-xs">{idx + 1}</td>
-                    <td><Link href={`/dashboard/contracts/${c.id}`} className="font-bold text-blue-600 hover:underline">{c.contractCode}</Link></td>
+                  <tr key={c.id} className="group hover:bg-slate-50/50 transition-colors">
+                    <td className="text-slate-400 text-sm font-bold">{idx + 1}</td>
+                    <td><Link href={`/dashboard/contracts/${c.id}`} className="font-black text-blue-600 hover:text-blue-800 hover:underline">{c.contractCode}</Link></td>
                     <td>
-                      <div className="font-semibold text-slate-800 leading-tight">{c.customer?.fullName}</div>
-                      {c.customer?.cccdNumber && <div className="text-xs text-slate-400">{c.customer.cccdNumber}</div>}
+                      <div className="font-black text-slate-800 text-[15px]">{c.customer?.fullName}</div>
+                      {c.customer?.cccdNumber && <div className="text-xs text-slate-500 font-medium">{c.customer.cccdNumber}</div>}
                     </td>
-                    <td className="text-slate-600 text-sm">{c.customer?.phone ?? '--'}</td>
-                    <td><span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-bold rounded">{c.assetType}</span></td>
+                    <td className="text-slate-600 font-bold text-[15px]">{c.customer?.phone ?? '--'}</td>
+                    <td><span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-black rounded-lg border border-slate-200">{c.assetType}</span></td>
                     <td>
-                      <div className="text-sm font-medium leading-tight">{[c.assetBrand, c.assetModel].filter(Boolean).join(' ') || '--'}</div>
-                      {c.assetPlate && <div className="text-xs text-blue-600 font-bold">{c.assetPlate}</div>}
+                      <div className="text-[15px] font-bold text-slate-800">{[c.assetBrand, c.assetModel].filter(Boolean).join(' ') || '--'}</div>
+                      {c.assetPlate && <div className="text-xs text-blue-600 font-black tracking-wider uppercase bg-blue-50 inline-block px-1.5 py-0.5 rounded mt-1">{c.assetPlate}</div>}
                     </td>
-                    <td className="font-bold whitespace-nowrap">{formatCurrency(c.pawningAmount)}</td>
-                    <td className="text-sm whitespace-nowrap">{formatInterestRate(c.interestRateType as any, c.interestRateValue, c.interestCycle as any)}</td>
-                    <td className="text-sm text-slate-600 whitespace-nowrap">{formatDate(new Date(c.startDate))}</td>
-                    <td className="font-bold text-right whitespace-nowrap">
-                      {accrued > 0 ? <span className="text-orange-600">{formatCurrency(accrued)}</span> : <span className="text-slate-400">0</span>}
-                      {od > 0 && <div className="text-xs text-red-500">({od} ngày)</div>}
+                    <td className="font-black text-[15px] text-right text-slate-800 whitespace-nowrap">{formatCurrency(c.pawningAmount)}</td>
+                    <td className="text-sm font-bold text-slate-600 whitespace-nowrap">{formatInterestRate(c.interestRateType as any, c.interestRateValue, c.interestCycle as any)}</td>
+                    <td className="text-[15px] font-semibold text-slate-600 whitespace-nowrap">{formatDate(new Date(c.startDate))}</td>
+                    <td className="font-black text-right whitespace-nowrap">
+                      {accrued > 0 ? <span className="text-orange-600 text-[15px]">{formatCurrency(accrued)}</span> : <span className="text-slate-400">0</span>}
+                      {od > 0 && <div className="text-xs text-red-500 bg-red-50 inline-block px-1.5 rounded-full mt-1">Trễ {od} ngày</div>}
                     </td>
                     <td><span className={STATUS_BADGE[c.status] || 'status-badge'}>{STATUS_LBL[c.status] ?? c.status}</span></td>
-                    <td className="text-sm whitespace-nowrap">
-                      {c.interestDueDate ? <span className={cn('font-medium', od > 0 ? 'text-red-600' : 'text-slate-600')}>{formatDate(new Date(c.interestDueDate))}</span> : '--'}
+                    <td className="text-[15px] whitespace-nowrap">
+                      {c.interestDueDate ? <span className={cn('font-black', od > 0 ? 'text-red-600' : 'text-slate-700')}>{formatDate(new Date(c.interestDueDate))}</span> : '--'}
                     </td>
                     <td>
-                      <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         {(c.status === 'INTEREST_DUE' || c.status === 'BAD_DEBT') && (
                           <form action={async (formData) => { 
                             const res = await sendManualReminder(formData);
                             if (res.error) alert(res.error);
-                            else alert('Đã gửi tin nhắn nhắc nợ thành công qua Zalo/SMS!');
+                            else alert('Đã gửi tin nhắn nhắc nợ thành công!');
                           }} className="inline m-0 p-0">
                             <input type="hidden" name="contractId" value={c.id} />
-                            <button type="submit" className="btn-icon text-orange-500 hover:bg-orange-50" title="Nhắn tin nhắc nợ">
-                              <MessageSquare size={14} />
+                            <button type="submit" className="btn-icon text-orange-500 hover:bg-orange-100 border border-transparent hover:border-orange-200 bg-orange-50/50" title="Nhắn tin nhắc nợ">
+                              <MessageSquare size={16} />
                             </button>
                           </form>
                         )}
@@ -205,29 +113,33 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
                           const res = await renewContract(formData);
                           if (res.error) alert(res.error);
                           else alert('Đã thu lãi và gia hạn thành công!');
-                        }} className="inline m-0 p-0 mr-1">
+                        }} className="inline m-0 p-0">
                           <input type="hidden" name="contractId" value={c.id} />
-                          <SubmitButton text="Gia hạn" className="px-2 py-1 text-xs font-bold rounded bg-amber-100 text-amber-700 hover:bg-amber-200" />
+                          <SubmitButton text="Thu Lãi" className="px-3 py-1.5 text-xs font-black rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-200 shadow-sm transition-transform active:scale-95" />
                         </form>
-
+                        
                         <button 
                           onClick={() => setPartialPayContract(c)}
-                          className="px-2 py-1 text-xs font-bold rounded bg-teal-100 text-teal-700 hover:bg-teal-200 mr-1" 
+                          className="px-3 py-1.5 text-xs font-black rounded-lg bg-teal-100 text-teal-700 hover:bg-teal-200 border border-teal-200 shadow-sm transition-transform active:scale-95" 
                           title="Trả bớt gốc"
                         >
-                          Trả bớt gốc
+                          Rút Gốc
                         </button>
                         
                         <button 
                           onClick={() => setSelectedContract(c)}
-                          className="px-2 py-1 text-xs font-bold rounded bg-slate-800 text-white hover:bg-slate-700 mr-1" 
+                          className="px-3 py-1.5 text-xs font-black rounded-lg bg-slate-800 text-white hover:bg-slate-700 shadow-sm transition-transform active:scale-95" 
                           title="Tất toán hợp đồng"
                         >
-                          Chuộc đồ
+                          Chuộc Đồ
                         </button>
 
-                        <Link href={`/dashboard/contracts/${c.id}`} className="btn-icon text-blue-600 hover:bg-blue-50" title="Xem"><Eye size={14} /></Link>
-                        <button className="btn-icon text-slate-500 hover:bg-slate-100" title="In bill"><Printer size={14} /></button>
+                        <Link href={`/dashboard/contracts/${c.id}`} className="btn-icon text-blue-600 hover:bg-blue-100 border border-transparent hover:border-blue-200 bg-blue-50/50" title="Xem Chi Tiết">
+                          <Eye size={16} />
+                        </Link>
+                        <button className="btn-icon text-slate-500 hover:bg-slate-200 bg-slate-100" title="In Biên Lai">
+                          <Printer size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -236,9 +148,9 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between text-sm text-slate-500">
-          <span>Hiển thị <strong>{filtered.length}</strong> / {contracts.length}</span>
-          <span>Tổng vốn: <strong className="text-slate-800">{formatCurrency(totalPawned)}</strong></span>
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[15px] font-bold text-slate-600">
+          <span>Kết quả: <strong className="text-blue-600 text-lg">{contracts.length}</strong> / {totalCount} hợp đồng</span>
+          <span>Dư nợ trên trang: <strong className="text-red-600 text-xl font-black">{formatCurrency(totalPawned)}</strong></span>
         </div>
       </div>
 
@@ -256,7 +168,7 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-teal-50/50">
-              <h3 className="text-xl font-bold text-teal-800">Trả bớt nợ gốc</h3>
+              <h3 className="text-xl font-black text-teal-800">Trả Bớt Nợ Gốc</h3>
               <button onClick={() => setPartialPayContract(null)} className="text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white transition-colors">✕</button>
             </div>
             <form action={async (formData) => {
@@ -269,13 +181,13 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
             }} className="p-6 space-y-6">
               <input type="hidden" name="contractId" value={partialPayContract.id} />
               
-              <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
-                <div className="text-sm font-semibold text-slate-500 mb-1">Dư nợ gốc hiện tại:</div>
+              <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-200 shadow-inner">
+                <div className="text-sm font-bold text-slate-500 mb-1">Dư nợ gốc hiện tại:</div>
                 <div className="text-3xl font-black text-red-600">{formatCurrency(partialPayContract.pawningAmount)}</div>
               </div>
 
               <div>
-                <label className="text-sm font-bold text-slate-700 mb-3 block text-center">Khách hàng muốn trả bớt bao nhiêu?</label>
+                <label className="text-sm font-black text-slate-700 mb-3 block text-center">Khách hàng muốn trả bớt bao nhiêu?</label>
                 <input 
                   type="text" 
                   name="amount" 
@@ -293,9 +205,9 @@ export default function ContractsClient({ contracts, shopId }: { contracts: Cont
               </div>
 
               <div className="pt-2 flex gap-3">
-                <button type="button" onClick={() => setPartialPayContract(null)} className="flex-1 py-4 text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 rounded-2xl transition-all">Hủy bỏ</button>
+                <button type="button" onClick={() => setPartialPayContract(null)} className="flex-1 py-4 text-slate-600 font-black text-lg bg-slate-100 hover:bg-slate-200 rounded-2xl transition-all border border-slate-200 shadow-sm">Hủy Bỏ</button>
                 <div className="flex-[2]">
-                  <SubmitButton text="Xác nhận thu gốc" className="w-full py-4 text-white font-bold bg-teal-600 hover:bg-teal-700 rounded-2xl transition-all shadow-lg shadow-teal-600/30 text-lg" />
+                  <SubmitButton text="XÁC NHẬN THU GỐC" className="w-full py-4 text-white font-black bg-teal-600 hover:bg-teal-700 rounded-2xl transition-all shadow-lg shadow-teal-600/30 text-lg border border-teal-500" />
                 </div>
               </div>
             </form>
