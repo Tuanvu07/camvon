@@ -65,6 +65,6 @@ export async function registerTenant(formData: FormData) {
 
     return { success: true, redirect: '/login' };
   } catch (error: any) {
-    return { error: error.message };
+    return { success: false, error: error.message || 'Lỗi hệ thống không xác định', stack: error.stack };
   }
 }

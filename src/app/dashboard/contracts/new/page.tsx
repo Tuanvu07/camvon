@@ -7,9 +7,14 @@ import { User, FileText, Landmark, Banknote } from 'lucide-react';
 import SubmitButton from '@/components/SubmitButton';
 import CameraCapture from '@/components/CameraCapture';
 
+import { useRouter } from 'next/navigation';
+import { AlertCircle } from 'lucide-react';
+
 export default function NewContractPage() {
   const [kycData, setKycData] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleScan = (data: any) => {
     setKycData({
@@ -20,9 +25,26 @@ export default function NewContractPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setIsSubmitting(true);
-    // Form action is handled natively by Next.js Server Actions
-    // So we just let the form submit normally, but we keep track of loading state
+    setErrorMsg(null);
+    
+    try {
+      const formData = new FormData(e.currentTarget);
+      const res = await createContractAction(formData);
+      
+      if (res?.error) {
+        setErrorMsg(res.error);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (res?.success && res.contractId) {
+        router.push(`/dashboard/contracts/${res.contractId}`);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Lỗi hệ thống không xác định.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -32,7 +54,17 @@ export default function NewContractPage() {
         <p className="page-subtitle">Sử dụng tính năng quét CCCD để điền thông tin tự động</p>
       </div>
 
-      <form action={createContractAction} onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {errorMsg && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-2xl shadow-sm flex items-start gap-4">
+          <AlertCircle className="text-red-500 shrink-0 w-8 h-8" />
+          <div>
+            <h3 className="text-red-800 font-black text-lg">Lỗi Tạo Hợp Đồng</h3>
+            <p className="text-red-600 font-medium mt-1">{errorMsg}</p>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* CỘT TRÁI: THÔNG TIN KHÁCH HÀNG */}
         <div className="lg:col-span-5 space-y-6">
