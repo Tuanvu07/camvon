@@ -36,8 +36,7 @@ export async function approveUpgrade(formData: FormData) {
     });
 
     revalidatePath('/admin');
-    return { success: true };
   } catch (error: any) {
-    return { error: error.message };
+    console.error('Lỗi khi duyệt:', error.message);
   }
 }
