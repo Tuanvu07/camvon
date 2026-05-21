@@ -176,6 +176,7 @@ model Contract {
   assetCondition String?
   assetImages    String  @default("[]") // JSON array of image URLs
   assetNote      String?
+  storageLocation String?
 
   // Tài chính
   pawningAmount     Float // Tiền vay gốc (loanAmount)

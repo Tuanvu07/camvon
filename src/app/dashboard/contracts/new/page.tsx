@@ -100,6 +100,12 @@ export default function NewContractPage() {
                 <div className="pt-2">
                   <CameraCapture />
                 </div>
+                
+                <div className="input-group pt-2">
+                  <label className="input-label">Vị trí lưu kho (Không bắt buộc)</label>
+                  <input name="storageLocation" type="text" className="input bg-white font-bold" placeholder="VD: Tủ 1 - Khay B, Bãi xe số 2..." />
+                  <p className="text-xs text-slate-500 mt-1">Dùng để in lên Tem dán tài sản và tra cứu kho bãi.</p>
+                </div>
               </div>
 
               {/* Tài Chính */}

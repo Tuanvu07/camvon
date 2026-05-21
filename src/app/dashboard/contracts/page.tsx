@@ -38,6 +38,7 @@ export default async function ContractsPage({
       { customer: { phone: { contains: query, mode: 'insensitive' } } },
       { customer: { cccdNumber: { contains: query, mode: 'insensitive' } } },
       { assetPlate: { contains: query, mode: 'insensitive' } },
+      { storageLocation: { contains: query, mode: 'insensitive' } },
     ];
   }
 
@@ -98,7 +99,7 @@ export default async function ContractsPage({
 
       {/* URL-driven Search Bar */}
       <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 flex items-center gap-4">
-        <Search placeholder="🔍 Nhập Tên KH, SĐT, CCCD, Mã HĐ hoặc Biển Số Xe để tìm tức thì..." />
+        <Search placeholder="🔍 Nhập Tên KH, SĐT, CCCD, Mã HĐ, Biển Số Xe, hoặc Tên Tủ/Kệ để tìm tức thì..." />
         <div className="shrink-0 text-slate-400 font-bold px-4">
           Tìm thấy <span className="text-blue-600 text-xl">{totalCount}</span> kết quả
         </div>
