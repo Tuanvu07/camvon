@@ -22,11 +22,13 @@ model Shop {
   ownerName      String?
   initialCapital Float    @default(0)
   cashBalance    Float    @default(0)
-  zaloOaToken    String?
-  printTemplate  String   @default("K80")
-  timezone       String   @default("Asia/Ho_Chi_Minh")
-  currency       String   @default("VND")
-  trialEndsAt    DateTime?
+  zaloOaToken      String?
+  printTemplate    String   @default("K80")
+  timezone         String   @default("Asia/Ho_Chi_Minh")
+  currency         String   @default("VND")
+  plan             String   @default("FREE")
+  upgradeRequested Boolean  @default(false)
+  trialEndsAt      DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

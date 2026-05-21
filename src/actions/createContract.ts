@@ -13,6 +13,12 @@ export async function createContractAction(formData: FormData) {
   const userId = (session.user as any).id;
   const staffName = (session.user as any).name;
 
+  // Trial Bouncer Check
+  const shop = await prisma.shop.findUnique({ where: { id: shopId } });
+  if (shop && shop.plan === 'FREE' && shop.trialEndsAt && new Date() > shop.trialEndsAt) {
+    throw new Error('Vui lòng nâng cấp gói cước để tiếp tục.');
+  }
+
   const fullName = formData.get('fullName') as string;
   const cccd = formData.get('cccd') as string;
   const phone = formData.get('phone') as string;
