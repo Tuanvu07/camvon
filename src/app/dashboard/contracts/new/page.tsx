@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createContractAction } from '@/actions/createContract';
 import CCCDScanner from '@/components/CCCDScanner';
 import { User, FileText, Landmark, Banknote } from 'lucide-react';

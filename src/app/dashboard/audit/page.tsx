@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
-import { formatVNDatetime } from '@/lib/timezone';
+import { formatVNDate } from '@/lib/timezone';
 import { formatCurrency } from '@/lib/utils';
 import { ShieldAlert, History, ArrowRight, User as UserIcon, FileText } from 'lucide-react';
 
@@ -153,7 +153,7 @@ export default async function AuditLogPage() {
                       </div>
                       <div className="text-sm font-bold text-slate-400 flex items-center gap-1.5">
                         <History size={14} />
-                        {formatVNDatetime(log.createdAt)}
+                        {formatVNDate(log.createdAt)}
                       </div>
                     </div>
 

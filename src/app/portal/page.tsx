@@ -17,7 +17,7 @@ export default function CustomerPortal() {
     if (res.error) {
       setError(res.error);
     } else {
-      setResult(res.contracts);
+      setResult(res.contracts || []);
     }
   };
 

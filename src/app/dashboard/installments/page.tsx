@@ -23,13 +23,16 @@ export default async function InstallmentsPage() {
       orderBy: { createdAt: 'desc' }
     });
 
+    const totalCount = contracts.length;
+    const totalPawned = contracts.reduce((sum, c) => sum + Number(c.pawningAmount || 0), 0);
+
     return (
       <div className="space-y-6 animate-fade-in">
         <div>
           <h1 className="page-title flex items-center gap-3"><TrendingDown className="text-blue-600" /> Quản Lý Trả Góp / Bốc Họ</h1>
           <p className="page-subtitle text-lg">Giao diện được đồng bộ 100% với Quản lý Cầm đồ để tối ưu trải nghiệm Elders-First.</p>
         </div>
-        <ContractsClient contracts={contracts as any} shopId={shopId} />
+        <ContractsClient contracts={contracts as any} shopId={shopId} totalCount={totalCount} totalPawned={totalPawned} />
       </div>
     );
   } catch (e) {
